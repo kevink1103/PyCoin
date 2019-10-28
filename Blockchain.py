@@ -35,6 +35,9 @@ class Blockchain:
 
     def add_new_transaction(self, transaction: Transaction):
         if transaction.verify_transaction_signature():
+            # Check balance before confirming a transaction
+            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) <= transaction.value:
+                return False
             self.unconfirmed_transactions.append(transaction.to_json())
             return True
         else:
@@ -137,11 +140,10 @@ class Blockchain:
         else:
             return False
 
-    def check_balance(self, myWallet):
+    def check_balance(self, address):
         if len(self.chain) == 0:
             return None
 
-        address = myWallet.pubkey
         balance = 0
 
         for block in self.chain:
@@ -153,6 +155,11 @@ class Blockchain:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
                     balance -= float(transaction["value"])
+        for transaction in self.unconfirmed_transactions:
+            if transaction["recipient"] == address:
+                    balance += float(transaction["value"])
+            elif transaction["sender"] == address:
+                balance -= float(transaction["value"])
         return balance
 
     @property

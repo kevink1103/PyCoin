@@ -127,13 +127,13 @@ if __name__ == "__main__":
     myWallet = Wallet()
     blockchain = Blockchain(myWallet)
     
-    dummy_trans = Transaction(myWallet.pubkey, "professor", 2.5)
+    dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
     dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))
     blockchain.add_new_transaction(dummy_trans)
     blockchain.mine(myWallet)
-    bal = blockchain.check_balance(myWallet)
+    bal = blockchain.check_balance(myWallet.pubkey)
     print(bal)
-    prnt(blockchain.last_block)
+    # prnt(blockchain.last_block, enable=False)
     # port = 5000
     # port = int(sys.argv[1])
     # print(port)
