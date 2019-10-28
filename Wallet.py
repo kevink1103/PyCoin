@@ -17,7 +17,7 @@ class Wallet:
         return binascii.hexlify(signer.sign(h)).decode('ascii')
     
     @property
-    def identity(self):
+    def pubkey(self):
         pubkey = binascii.hexlify(self._public_key.exportKey(format='DER'))
         return pubkey.decode('ascii')
     

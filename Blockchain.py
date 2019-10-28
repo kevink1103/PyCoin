@@ -2,6 +2,7 @@ import datetime
 import json
 import requests
 from urllib.parse import urlparse
+from pyprnt import prnt
 
 from Transaction import Transaction
 from Block import Block
@@ -10,15 +11,14 @@ class Blockchain:
     difficulty = 2
     nodes = set()
 
-    def __init__(self, address):
+    def __init__(self, myWallet):
         self.unconfirmed_transactions = []
         self.chain = []
-        self.create_genesis_block(address)
+        self.create_genesis_block(myWallet)
 
-    def create_genesis_block(self, address):
-        # block_reward = Transaction("Block_Reward", myWallet.identity, "5.0").to_json()
-        block_reward = Transaction("Block_Reward", address, "5.0").to_json()
-        genesis_block = Block(0, block_reward, datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
+    def create_genesis_block(self, myWallet):
+        block_reward = Transaction("Block_Reward", myWallet.pubkey, "5.0").to_json()
+        genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block.to_json())
     
@@ -119,7 +119,7 @@ class Blockchain:
         return True
 
     def mine(self, myWallet):
-        block_reward = Transaction("Block_Reward", myWallet.identity, "5.0").to_json()
+        block_reward = Transaction("Block_Reward", myWallet.pubkey, "5.0").to_json()
         self.unconfirmed_transactions.insert(0, block_reward)
         if not self.unconfirmed_transactions:
             return False
@@ -136,6 +136,24 @@ class Blockchain:
             return new_block
         else:
             return False
+
+    def check_balance(self, myWallet):
+        if len(self.chain) == 0:
+            return None
+
+        address = myWallet.pubkey
+        balance = 0
+
+        for block in self.chain:
+            block = json.loads(block)
+            transactions = [json.loads(transaction) for transaction in block["transaction"]]
+            prnt(transactions)
+            for transaction in transactions:
+                if transaction["recipient"] == address:
+                    balance += float(transaction["value"])
+                elif transaction["sender"] == address:
+                    balance -= float(transaction["value"])
+        return balance
 
     @property
     def last_block(self):

@@ -1,5 +1,7 @@
+import sys
 import json
 import requests
+from pyprnt import prnt
 
 from Wallet import Wallet
 from Transaction import Transaction
@@ -17,7 +19,7 @@ def new_transaction():
     # Check that the required fields are in the POST data
     if not all(k in values for k in required):
         return 'Missing values', 400
-    transaction = Transaction(myWallet.identity, values['recipient_address'], values['amount'])
+    transaction = Transaction(myWallet.pubkey, values['recipient_address'], values['amount'])
     transaction.add_signature(myWallet.sign_transaction(transaction))
     transaction_result = blockchain.add_new_transaction(transaction)
     if transaction_result:
@@ -123,6 +125,16 @@ def mine():
 
 if __name__ == "__main__":
     myWallet = Wallet()
-    blockchain = Blockchain(myWallet.identity)
-    port = 5000
-    app.run(host='127.0.0.1', port=port, debug=True)
+    blockchain = Blockchain(myWallet)
+    
+    dummy_trans = Transaction(myWallet.pubkey, "professor", 2.5)
+    dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))
+    blockchain.add_new_transaction(dummy_trans)
+    blockchain.mine(myWallet)
+    bal = blockchain.check_balance(myWallet)
+    print(bal)
+    prnt(blockchain.last_block)
+    # port = 5000
+    # port = int(sys.argv[1])
+    # print(port)
+    # app.run(host='127.0.0.1', port=port, debug=True)
