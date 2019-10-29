@@ -3,6 +3,7 @@
 from hashlib import sha256
 from pyprnt import prnt
 
+# These txHashes should already be hashed
 txHashes = [
     "00baf6626abc2df808da36a518c69f09b0d2ed0a79421ccfde4f559d2e42128b",
     "91c5e9f288437262f218c60f986e8bc10fb35ab3b9f6de477ff0eb554da89dea",
