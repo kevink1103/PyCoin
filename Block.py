@@ -2,6 +2,7 @@ from Crypto.Hash import SHA
 from hashlib import sha256
 import json
 
+
 class Block:
     def __init__(self, index, transaction, timestamp, previous_hash):
         self.index = index
