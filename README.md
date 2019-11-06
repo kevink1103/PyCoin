@@ -15,12 +15,12 @@ To develop an “Bitcoin” application using Python.
 
 ## Compulsory Features
 
-- [ ] Able to generate a new wallet
-- [ ] Able to perform transactions
-- [ ] Able to generate coins reward
-- [ ] Able to generate new blocks using proof-of work consensus protocol
-- [ ] Able to broadcast new blocks to the rests of connected peers
-- [ ] Able to connect peers and sync the whole blockchain
+- [x] Able to generate a new wallet
+- [x] Able to perform transactions
+- [x] Able to generate coins reward
+- [x] Able to generate new blocks using proof-of work consensus protocol
+- [x] Able to broadcast new blocks to the rests of connected peers
+- [x] Able to connect peers and sync the whole blockchain
 
 ## Optional Features
 
