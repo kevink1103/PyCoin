@@ -24,27 +24,51 @@ class Blockchain:
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block.to_json())
+
+    @property
+    def last_block(self):
+        return json.loads(self.chain[-1])
     
     def register_node(self, node_url):
         # Checking node_url has valid format
         parsed_url = urlparse(node_url)
         if parsed_url.netloc:
+            # Accepts an URL scheme with http in front
             self.nodes.add(parsed_url.netloc)
         elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'
+            # Accepts an URL scheme like '192.168.0.5:5000'
             self.nodes.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
 
+    def check_balance(self, address: str) -> float:
+        if len(self.chain) <= 0:
+            return None
+
+        balance = 0.0
+
+        for block in self.chain:
+            block = json.loads(block)
+            transactions = [json.loads(transaction) for transaction in block["transaction"]]
+            for transaction in transactions:
+                if transaction["recipient"] == address:
+                    balance += float(transaction["value"])
+                elif transaction["sender"] == address:
+                    balance -= float(transaction["value"])
+        for transaction in self.unconfirmed_transactions:
+            if transaction["recipient"] == address:
+                    balance += float(transaction["value"])
+            elif transaction["sender"] == address:
+                balance -= float(transaction["value"])
+        return balance
+
     def add_new_transaction(self, transaction: Transaction) -> bool:
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
-            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) <= transaction.value:
-                return False
-            self.unconfirmed_transactions.append(transaction.to_json())
-            return True
-        else:
-            return False
+            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= transaction.value:
+                self.unconfirmed_transactions.append(transaction.to_json())
+                return True
+        return False
     
     def add_block(self, block: Block, proof: str) -> bool:
         previous_hash = self.last_block['hash']
@@ -142,29 +166,3 @@ class Blockchain:
             return new_block
         else:
             return False
-
-    def check_balance(self, address: str) -> float:
-        if len(self.chain) <= 0:
-            return None
-
-        balance = 0.0
-
-        for block in self.chain:
-            block = json.loads(block)
-            transactions = [json.loads(transaction) for transaction in block["transaction"]]
-            prnt(transactions)
-            for transaction in transactions:
-                if transaction["recipient"] == address:
-                    balance += float(transaction["value"])
-                elif transaction["sender"] == address:
-                    balance -= float(transaction["value"])
-        for transaction in self.unconfirmed_transactions:
-            if transaction["recipient"] == address:
-                    balance += float(transaction["value"])
-            elif transaction["sender"] == address:
-                balance -= float(transaction["value"])
-        return balance
-
-    @property
-    def last_block(self):
-        return json.loads(self.chain[-1])
