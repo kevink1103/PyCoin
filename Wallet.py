@@ -13,7 +13,8 @@ class Wallet:
     
     def sign_transaction(self, transaction):
         signer = PKCS1_v1_5.new(self._private_key)
-        h = SHA.new(str(transaction.to_dict()).encode('utf-8'))
+        payload = str(transaction.to_dict()).encode('utf-8')
+        h = SHA.new(payload)
         return binascii.hexlify(signer.sign(h)).decode('ascii')
     
     @property
@@ -25,3 +26,6 @@ class Wallet:
     def secret(self):
         seckey = binascii.hexlify(self._private_key.exportKey(format='DER'))
         return seckey.decode('ascii')
+
+if __name__ == "__main__":
+    wallet = Wallet()

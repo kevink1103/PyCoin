@@ -63,25 +63,25 @@ def register_node():
     values = request.form
     node = values.get('node')
     com_port = values.get('com_port')
-    # handle type B request
+    # Handle type B request
     if com_port is not None:
         blockchain.register_node(request.remote_addr + ":" + com_port)
         return "ok", 200
-    # handle type A request
+    # Handle type A request
     if node is None and com_port is None:
         return "Error: Please supply a valid nodes", 400
-    # register node
+    # Register node
     blockchain.register_node(node)
-    # retrieve nodes list
+    # Retrieve nodes list
     node_list = requests.get('http://' + node + '/get_nodes')
     if node_list.status_code == 200:
         node_list = node_list.json()['nodes']
         for node in node_list:
             blockchain.register_node(node)
     for new_nodes in blockchain.nodes:
-        # sending type B request
-        requests.post('http://' + new_nodes + '/register_node', data={'com_port': str(port)})
-    # check if our chain is authoritative from other nodes
+        # Sending type B request
+        requests.post('http://' + new_nodes + '/register_node', data={'com_port': str(com_port)})
+    # Check if our chain is authoritative from other nodes
     replaced = blockchain.consensus()
     if replaced:
         response = {

@@ -25,4 +25,5 @@ class Block:
         return json.dumps(self.__dict__)
 
     def compute_hash(self):
-        return sha256(str(self.to_dict()).encode()).hexdigest()
+        payload = str(self.to_dict()).encode()
+        return sha256(payload).hexdigest()
