@@ -41,6 +41,7 @@ must be fulfilled)
 - PyCrypto
 - PyPrnt
 - Flask
+- Coverage
 
 ## Start
 
