@@ -2,7 +2,7 @@
 
 ## Mini Project for EE4017 Internet Finance
 
-To develop an “Bitcoin” application using Python.
+To develop a “Bitcoin” application using Python.
 
 1. Each group consists of 5 students
 2. Each group to demo in week 12
@@ -33,3 +33,23 @@ To develop an “Bitcoin” application using Python.
 must be fulfilled)
 - [ ] Able to change difficulty when the hash power of the network change
 - [ ] Develop an App on any mobile platform to perform mobile payment using the cryptocurrency network
+
+## Requirements
+
+- Python 3
+- Requests
+- PyCrypto
+- PyPrnt
+- Flask
+
+## Start
+
+```bash
+python3 Server.py
+```
+
+## Unit Test
+
+```bash
+python3 -m unittest
+```

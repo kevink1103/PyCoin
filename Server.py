@@ -1,14 +1,14 @@
 import sys
 import json
+
 import requests
 from pyprnt import prnt
-
-from Wallet import Wallet
-from Transaction import Transaction
-from Block import Block
-from Blockchain import Blockchain
-
 from flask import Flask, jsonify, request
+
+from pycoin import Wallet
+from pycoin import Transaction
+from pycoin import Block
+from pycoin import Blockchain
 
 app = Flask(__name__)
 

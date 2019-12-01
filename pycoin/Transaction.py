@@ -1,8 +1,9 @@
+import binascii
+import json
+
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA
-import binascii
-import json
 
 class Transaction:
     def __init__(self, sender, recipient, value):
@@ -10,26 +11,29 @@ class Transaction:
         self.recipient = recipient
         self.value = value
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         # Signature is not included here
-        return ({
+        return {
             'sender': self.sender,
             'recipient': self.recipient,
             'value': self.value
-        })
+        }
 
-    def to_json(self):
+    def to_json(self) -> str:
         return json.dumps(self.__dict__, sort_keys=False)
     
-    def add_signature(self, signature):
+    def add_signature(self, signature) -> None:
         self.signature = signature
 
-    def verify_transaction_signature(self):
+    def verify_transaction_signature(self) -> bool:
         if hasattr(self, 'signature'):
-            public_key = RSA.importKey(binascii.unhexlify(self.sender))
-            verifier = PKCS1_v1_5.new(public_key)
+            pubkey = RSA.importKey(binascii.unhexlify(self.sender))
+            verifier = PKCS1_v1_5.new(pubkey)
             payload = str(self.to_dict()).encode('utf-8')
             h = SHA.new(payload)
-            return verifier.verify(h, binascii.unhexlify(self.signature))
+            try:
+                return verifier.verify(h, binascii.unhexlify(self.signature))
+            except:
+                return False
         else:
             return False
