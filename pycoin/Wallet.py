@@ -29,10 +29,3 @@ class Wallet:
     def secret(self) -> str:
         seckey = binascii.hexlify(self._private_key.exportKey(format='DER'))
         return seckey.decode('ascii')
-
-if __name__ == "__main__":
-    wallet = Wallet()
-    transaction = Transaction(wallet.pubkey, 'CityU', 50)
-    print(wallet.sign_transaction(transaction))
-    print(wallet.pubkey)
-    print(wallet.secret)

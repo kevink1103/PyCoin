@@ -1,18 +1,21 @@
 import json
 from hashlib import sha256
+from typing import List
 
 from Crypto.Hash import SHA
 
-class Block:
-    def __init__(self, index, transaction, timestamp, previous_hash):
-        self.index = index
-        self.transaction = transaction
-        self.timestamp = timestamp
-        self.previous_hash = previous_hash
-        self.hash = '0'
-        self.nonce = 0
+from pycoin import Transaction
 
-    def to_dict(self):
+class Block:
+    def __init__(self, index: int, transaction: List[Transaction], timestamp: str, previous_hash: str):
+        self.index: int = index
+        self.transaction: List[Transaction] = transaction
+        self.timestamp: str = timestamp
+        self.previous_hash: str = previous_hash
+        self.hash: str = "0"
+        self.nonce: int = 0
+
+    def to_dict(self) -> dict:
         return {
             'index': self.index,
             'transaction': self.transaction,
@@ -21,9 +24,9 @@ class Block:
             'nonce': self.nonce
         }
     
-    def to_json(self):
-        return json.dumps(self.__dict__)
+    def to_json(self) -> str:
+        return json.dumps(self.__dict__, sort_keys=False)
 
-    def compute_hash(self):
+    def compute_hash(self) -> str:
         payload = str(self.to_dict()).encode()
         return sha256(payload).hexdigest()
