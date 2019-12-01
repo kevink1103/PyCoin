@@ -1,11 +1,12 @@
 import datetime
 import json
-import requests
 from urllib.parse import urlparse
+
+import requests
 from pyprnt import prnt
 
-from Transaction import Transaction
-from Block import Block
+from pycoin import Transaction
+from pycoin import Block
 
 class Blockchain:
     difficulty = 2
