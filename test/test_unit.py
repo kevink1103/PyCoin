@@ -3,20 +3,14 @@ import datetime
 
 from pyprnt import prnt
 
-try:
-    from pycoin import Wallet
-    from pycoin import Transaction
-    from pycoin import Block
-    from pycoin import Blockchain
-except:
-    import os,sys,inspect
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    parentdir = os.path.dirname(currentdir)
-    sys.path.insert(0, parentdir)
-    from pycoin import Wallet
-    from pycoin import Transaction
-    from pycoin import Block
-    from pycoin import Blockchain
+import os, sys, inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+from pycoin import Wallet
+from pycoin import Transaction
+from pycoin import Block
+from pycoin import Blockchain
 
 class TestWallet(unittest.TestCase):
 
@@ -25,7 +19,7 @@ class TestWallet(unittest.TestCase):
 
         self.assertIsInstance(wallet, Wallet)
 
-    def test_wallet_sign_transaction(self):
+    def test_wallet_sign_transaction_valid(self):
         wallet = Wallet()
         transaction = Transaction(wallet.pubkey, "CityU", 1)
         signature = wallet.sign_transaction(transaction)
@@ -87,6 +81,13 @@ class TestTransaction(unittest.TestCase):
         verify = transaction.verify_transaction_signature()
 
         self.assertTrue(verify)
+
+    def test_transaction_verify_transaction_signature_no_signature(self):
+        wallet = Wallet()
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        verify = transaction.verify_transaction_signature()
+
+        self.assertFalse(verify)
     
     def test_transaction_verify_transaction_signature_wrong_transaction(self):
         wallet1 = Wallet()
@@ -104,6 +105,14 @@ class TestTransaction(unittest.TestCase):
         transaction = Transaction(wallet1.pubkey, "CityU", 1)
         signature = wallet2.sign_transaction(transaction)
         transaction.add_signature(signature)
+        verify = transaction.verify_transaction_signature()
+
+        self.assertFalse(verify)
+
+    def test_transaction_verify_transaction_signature_too_large_signature(self):
+        wallet = Wallet()
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        transaction.add_signature("3379cc2f08e4cde5d24af02611c32693b18f406d4b58fbcd2bbd0acc67b1d")
         verify = transaction.verify_transaction_signature()
 
         self.assertFalse(verify)
@@ -161,6 +170,13 @@ class TestBlockchain(unittest.TestCase):
         self.assertIsInstance(blockchain, Blockchain)
         self.assertEqual(len(blockchain.chain), 1)
 
+    def test_blockchain_last_block(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        block = blockchain.last_block
+
+        self.assertGreater(len(block), 0)
+
     def test_blockchain_register_node(self):
         wallet = Wallet()
         blockchain = Blockchain(wallet)
@@ -170,12 +186,26 @@ class TestBlockchain(unittest.TestCase):
         self.assertTrue("127.0.0.1:101" in blockchain.nodes)
         self.assertTrue("127.0.0.1:102" in blockchain.nodes)
 
+    def test_blockchain_register_node_wrong_address(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        
+        self.assertRaises(ValueError, blockchain.register_node, "")
+
     def test_blockchain_check_balance(self):
         wallet = Wallet()
         blockchain = Blockchain(wallet)
         balance = blockchain.check_balance(wallet.pubkey)
         
         self.assertGreater(balance, 0)
+
+    def test_blockchain_check_balance_no_chain(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        blockchain.chain = []
+        balance = blockchain.check_balance(wallet.pubkey)
+        
+        self.assertFalse(balance)
 
     def test_blockchain_add_new_transaction_enough_balance(self):
         wallet = Wallet()
