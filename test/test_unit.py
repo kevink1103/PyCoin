@@ -6,6 +6,7 @@ from pyprnt import prnt
 from pycoin import Wallet
 from pycoin import Transaction
 from pycoin import Block
+from pycoin import Blockchain
 
 class TestWallet(unittest.TestCase):
 
@@ -99,7 +100,7 @@ class TestTransaction(unittest.TestCase):
 
 class TestBlock(unittest.TestCase):
 
-    def test_block_creation(self):
+    def test_block_initialize(self):
         wallet = Wallet()
         transaction = Transaction(wallet.pubkey, "CityU", 50)
         signature = wallet.sign_transaction(transaction)
@@ -140,6 +141,19 @@ class TestBlock(unittest.TestCase):
 
         self.assertIsInstance(hash_val, str)
         self.assertGreater(len(hash_val), 0)
+
+class TestBlockchain(unittest.TestCase):
+
+    def test_blockchain_initialize_create_genesis_block(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        
+        self.assertIsInstance(blockchain, Blockchain)
+        self.assertEqual(len(blockchain.chain), 1)
+
+        # transaction = Transaction(wallet.pubkey, "CityU", 50)
+        # signature = wallet.sign_transaction(transaction)
+        # transaction.add_signature(signature)
 
 if __name__ == "__main__":
     unittest.main()

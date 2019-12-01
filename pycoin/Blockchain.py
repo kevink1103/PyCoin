@@ -1,10 +1,12 @@
 import datetime
 import json
 from urllib.parse import urlparse
+from typing import List, Union
 
 import requests
 from pyprnt import prnt
 
+from pycoin import Wallet
 from pycoin import Transaction
 from pycoin import Block
 
@@ -12,13 +14,13 @@ class Blockchain:
     difficulty = 2
     nodes = set()
 
-    def __init__(self, myWallet):
-        self.unconfirmed_transactions = []
-        self.chain = []
-        self.create_genesis_block(myWallet)
+    def __init__(self, wallet: Wallet):
+        self.unconfirmed_transactions: List[Transaction] = []
+        self.chain: List[Block] = []
+        self.create_genesis_block(wallet)
 
-    def create_genesis_block(self, myWallet):
-        block_reward = Transaction("Block_Reward", myWallet.pubkey, "5.0").to_json()
+    def create_genesis_block(self, wallet: Wallet):
+        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         genesis_block.hash = genesis_block.compute_hash()
         self.chain.append(genesis_block.to_json())
@@ -34,7 +36,7 @@ class Blockchain:
         else:
             raise ValueError('Invalid URL')
 
-    def add_new_transaction(self, transaction: Transaction):
+    def add_new_transaction(self, transaction: Transaction) -> bool:
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
             if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) <= transaction.value:
@@ -44,7 +46,7 @@ class Blockchain:
         else:
             return False
     
-    def add_block(self, block, proof):
+    def add_block(self, block: Block, proof: str) -> bool:
         previous_hash = self.last_block['hash']
         if previous_hash != block.previous_hash:
             return False
@@ -54,10 +56,10 @@ class Blockchain:
         self.chain.append(block.to_json())
         return True
 
-    def is_valid_proof(self, block, block_hash):
+    def is_valid_proof(self, block: Block, block_hash: str) -> bool:
         return (block_hash.startswith('0' * Blockchain.difficulty) and block_hash == block.compute_hash())
 
-    def proof_of_work(self, block):
+    def proof_of_work(self, block: Block) -> str:
         block.nonce = 0
         computed_hash = block.compute_hash()
         while not computed_hash.startswith('0' * Blockchain.difficulty):
@@ -65,7 +67,7 @@ class Blockchain:
             computed_hash = block.compute_hash()
         return computed_hash
 
-    def consensus(self):
+    def consensus(self) -> bool:
         neighbours = self.nodes
         new_chain = None
         # We're only looking for chains longer than ours
@@ -86,7 +88,7 @@ class Blockchain:
             return True
         return False
 
-    def valid_chain(self, chain):
+    def valid_chain(self, chain: List[Block]) -> bool:
         # Check if a blockchain is valid
         current_index = 0
         chain = json.loads(chain)
@@ -122,8 +124,8 @@ class Blockchain:
             current_index += 1
         return True
 
-    def mine(self, myWallet):
-        block_reward = Transaction("Block_Reward", myWallet.pubkey, "5.0").to_json()
+    def mine(self, wallet: Wallet) -> Union[Block, bool]:
+        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         self.unconfirmed_transactions.insert(0, block_reward)
         if not self.unconfirmed_transactions:
             return False
@@ -141,11 +143,11 @@ class Blockchain:
         else:
             return False
 
-    def check_balance(self, address):
-        if len(self.chain) == 0:
+    def check_balance(self, address: str) -> float:
+        if len(self.chain) <= 0:
             return None
 
-        balance = 0
+        balance = 0.0
 
         for block in self.chain:
             block = json.loads(block)
