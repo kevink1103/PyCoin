@@ -53,3 +53,9 @@ python3 Server.py
 ```bash
 python3 -m unittest
 ```
+
+### Test with Coverage
+
+```bash
+bash test.sh
+```
