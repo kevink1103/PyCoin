@@ -86,7 +86,7 @@ class Blockchain:
         return False
 
     def valid_chain(self, chain):
-        # check if a blockchain is valid
+        # Check if a blockchain is valid
         current_index = 0
         chain = json.loads(chain)
 
@@ -105,7 +105,7 @@ class Blockchain:
             if isinstance(current_block.transaction, list):
                 for transaction in current_block.transaction:
                     transaction = json.loads(transaction)
-                    # skip Block reward because it does not have signature
+                    # Skip block reward because it does not have signature
                     if transaction['sender'] == 'Block_Reward':
                         continue
                     current_transaction = Transaction(
@@ -113,7 +113,7 @@ class Blockchain:
                         transaction['recipient'],
                         transaction['value'])
                     current_transaction.signature = transaction['signature']
-                    # validate digital signature of each transaction
+                    # Validate digital signature of each transaction
                     if not current_transaction.verify_transaction_signature():
                         return False
                 if not self.is_valid_proof(current_block, block['hash']):
