@@ -90,20 +90,20 @@ class TestTransaction(unittest.TestCase):
         self.assertFalse(verify)
     
     def test_transaction_verify_transaction_signature_wrong_transaction(self):
-        wallet1 = Wallet()
-        wallet2 = Wallet()
-        transaction = Transaction(wallet2.pubkey, "CityU", 1)
-        signature = wallet1.sign_transaction(transaction)
+        wallet = Wallet()
+        wrong = Wallet()
+        transaction = Transaction(wrong.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
         transaction.add_signature(signature)
         verify = transaction.verify_transaction_signature()
 
         self.assertFalse(verify)
 
     def test_transaction_verify_transaction_signature_wrong_wallet(self):
-        wallet1 = Wallet()
-        wallet2 = Wallet()
-        transaction = Transaction(wallet1.pubkey, "CityU", 1)
-        signature = wallet2.sign_transaction(transaction)
+        wallet = Wallet()
+        wrong = Wallet()
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wrong.sign_transaction(transaction)
         transaction.add_signature(signature)
         verify = transaction.verify_transaction_signature()
 
@@ -226,6 +226,84 @@ class TestBlockchain(unittest.TestCase):
         blockchain.add_new_transaction(transaction)
 
         self.assertEqual(len(blockchain.unconfirmed_transactions), 0)
+
+    def test_blockchain_proof_of_work(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
+        transaction.add_signature(signature)
+        previous_hash = blockchain.last_block["hash"]
+        block = Block(0, [transaction.to_json()], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), previous_hash)
+        computed_hash = blockchain.proof_of_work(block)
+        
+        self.assertGreater(len(computed_hash), 0)
+
+    def test_blockchain_proof_of_work_bad_block(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
+        transaction.add_signature(signature)
+        previous_hash = blockchain.last_block["hash"]
+        block = Block(0, [transaction.to_json()], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), previous_hash)
+        delattr(block, "transaction")
+
+        self.assertRaises(AttributeError, blockchain.proof_of_work, block)
+
+    def test_blockchain_is_valid_proof(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
+        transaction.add_signature(signature)
+        previous_hash = blockchain.last_block["hash"]
+        block = Block(0, [transaction.to_json()], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), previous_hash)
+        computed_hash = blockchain.proof_of_work(block)
+        valid = blockchain.is_valid_proof(block, computed_hash)
+        
+        self.assertTrue(valid)
+
+    def test_blockchain_add_block(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
+        transaction.add_signature(signature)
+        previous_hash = blockchain.last_block["hash"]
+        block = Block(0, [transaction.to_json()], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), previous_hash)
+        computed_hash = blockchain.proof_of_work(block)
+        result = blockchain.add_block(block, computed_hash)
+
+        self.assertTrue(result)
+
+    def test_blockchain_add_block_wrong_previous_hash(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
+        transaction.add_signature(signature)
+        block = Block(0, [transaction.to_json()], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "Wrong")
+        computed_hash = blockchain.proof_of_work(block)
+        result = blockchain.add_block(block, computed_hash)
+
+        self.assertFalse(result)
+
+    def test_blockchain_add_block_wrong_proof(self):
+        wallet = Wallet()
+        blockchain = Blockchain(wallet)
+        transaction = Transaction(wallet.pubkey, "CityU", 1)
+        signature = wallet.sign_transaction(transaction)
+        transaction.add_signature(signature)
+        previous_hash = blockchain.last_block["hash"]
+        block = Block(0, [transaction.to_json()], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), previous_hash)
+        computed_hash = "Wrong"
+        result = blockchain.add_block(block, computed_hash)
+
+        self.assertFalse(result)
+
+    def test_blockchain_mine(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()
