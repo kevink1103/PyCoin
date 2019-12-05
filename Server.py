@@ -12,52 +12,6 @@ from pycoin import Blockchain
 
 app = Flask(__name__)
 
-@app.route('/new_transaction', methods=['POST'])
-def new_transaction():
-    values = request.form
-    required = ['recipient_address', 'amount']
-    # Check that the required fields are in the POST data
-    if not all(k in values for k in required):
-        return 'Missing values', 400
-    transaction = Transaction(myWallet.pubkey, values['recipient_address'], values['amount'])
-    transaction.add_signature(myWallet.sign_transaction(transaction))
-    transaction_result = blockchain.add_new_transaction(transaction)
-    if transaction_result:
-        response = {'message': 'Transaction will be added to Block'}
-        return jsonify(response), 201
-    else:
-        response = {'message': 'Invalid Transaction!'}
-        return jsonify(response), 406
-
-@app.route('/get_transactions', methods=['GET'])
-def get_transactions():
-    # Get transactions from transactions pool
-    transactions = blockchain.unconfirmed_transactions
-    response = {'transactions': transactions}
-    return jsonify(response), 200
-
-@app.route('/chain', methods=['GET'])
-def part_chain():
-    response = {
-        'chain': blockchain.chain[-10:],
-        'length': len(blockchain.chain),
-    }
-    return jsonify(response), 200
-
-@app.route('/fullchain', methods=['GET'])
-def full_chain():
-    response = {
-        'chain': json.dumps(blockchain.chain),
-        'length': len(blockchain.chain),
-    }
-    return jsonify(response), 200
-
-@app.route('/get_nodes', methods=['GET'])
-def get_nodes():
-    nodes = list(blockchain.nodes)
-    response = {'nodes': nodes}
-    return jsonify(response), 200
-
 @app.route('/register_node', methods=['POST'])
 def register_node():
     values = request.form
@@ -80,7 +34,8 @@ def register_node():
             blockchain.register_node(node)
     for new_nodes in blockchain.nodes:
         # Sending type B request
-        requests.post('http://' + new_nodes + '/register_node', data={'com_port': str(com_port)})
+        next_address = 'http://' + new_nodes + '/register_node'
+        requests.post(next_address, data={'com_port': com_port})
     # Check if our chain is authoritative from other nodes
     replaced = blockchain.consensus()
     if replaced:
@@ -94,6 +49,52 @@ def register_node():
             'total_nodes': [node for node in blockchain.nodes]
         }
     return jsonify(response), 201
+
+@app.route('/chain', methods=['GET'])
+def part_chain():
+    response = {
+        'chain': blockchain.chain[-10:],
+        'length': len(blockchain.chain),
+    }
+    return jsonify(response), 200
+
+@app.route('/fullchain', methods=['GET'])
+def full_chain():
+    response = {
+        'chain': json.dumps(blockchain.chain),
+        'length': len(blockchain.chain),
+    }
+    return jsonify(response), 200
+
+@app.route('/new_transaction', methods=['POST'])
+def new_transaction():
+    values = request.form
+    required = ['recipient_address', 'amount']
+    # Check that the required fields are in the POST data
+    if not all(k in values for k in required):
+        return 'Missing values', 400
+    transaction = Transaction(myWallet.pubkey, values['recipient_address'], values['amount'])
+    transaction.add_signature(myWallet.sign_transaction(transaction))
+    transaction_result = blockchain.add_new_transaction(transaction)
+    if transaction_result:
+        response = {'message': 'Transaction will be added to Block'}
+        return jsonify(response), 201
+    else:
+        response = {'message': 'Invalid Transaction!'}
+        return jsonify(response), 406
+
+@app.route('/get_nodes', methods=['GET'])
+def get_nodes():
+    nodes = list(blockchain.nodes)
+    response = {'nodes': nodes}
+    return jsonify(response), 200
+
+@app.route('/get_transactions', methods=['GET'])
+def get_transactions():
+    # Get transactions from transactions pool
+    transactions = blockchain.unconfirmed_transactions
+    response = {'transactions': transactions}
+    return jsonify(response), 200
 
 @app.route('/consensus', methods=['GET'])
 def consensus():
@@ -127,14 +128,14 @@ if __name__ == "__main__":
     myWallet = Wallet()
     blockchain = Blockchain(myWallet)
     
-    dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
-    dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))
-    blockchain.add_new_transaction(dummy_trans)
-    blockchain.mine(myWallet)
-    bal = blockchain.check_balance(myWallet.pubkey)
-    print(bal)
+    # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
+    # dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))
+    # blockchain.add_new_transaction(dummy_trans)
+    # blockchain.mine(myWallet)
+    # bal = blockchain.check_balance(myWallet.pubkey)
+    # print(bal)
     # prnt(blockchain.last_block, enable=False)
     # port = 5000
-    # port = int(sys.argv[1])
-    # print(port)
-    # app.run(host='127.0.0.1', port=port, debug=True)
+    port = int(sys.argv[1])
+    print(port)
+    app.run(host='127.0.0.1', port=port, debug=True)

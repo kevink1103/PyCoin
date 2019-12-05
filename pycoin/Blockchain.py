@@ -22,7 +22,7 @@ class Blockchain:
     def create_genesis_block(self, wallet: Wallet):
         block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
-        genesis_block.hash = genesis_block.compute_hash()
+        genesis_block.hash = self.proof_of_work(genesis_block)
         self.chain.append(genesis_block.to_json())
 
     @property
@@ -79,7 +79,7 @@ class Blockchain:
         return computed_hash
 
     def is_valid_proof(self, block: Block, block_hash: str) -> bool:
-        return (block_hash.startswith('0' * Blockchain.difficulty) and block_hash == block.compute_hash())
+        return (block_hash.startswith('0' * Blockchain.difficulty) and (block_hash == block.compute_hash()))
     
     def add_block(self, block: Block, proof: str) -> bool:
         previous_hash = self.last_block['hash']
