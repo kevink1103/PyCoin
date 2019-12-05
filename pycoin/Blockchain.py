@@ -65,7 +65,7 @@ class Blockchain:
     def add_new_transaction(self, transaction: Transaction) -> bool:
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
-            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= transaction.value:
+            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= float(transaction.value):
                 self.unconfirmed_transactions.append(transaction.to_json())
                 return True
         return False
