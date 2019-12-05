@@ -41,6 +41,7 @@ class Blockchain:
         else:
             raise ValueError('Invalid URL')
 
+    # Experimental
     def check_balance(self, address: str) -> float:
         if len(self.chain) <= 0:
             return None

@@ -43,6 +43,13 @@ must be fulfilled)
 - Flask
 - Coverage
 
+```bash
+# If you have both Python 2 and 3,
+pip3 install -r requirements.txt
+# If you only have Python 3,
+pip install -r requirements.txt
+```
+
 ## Start
 
 ```bash
