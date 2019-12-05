@@ -31,6 +31,7 @@ class Block:
     def compute_hash(self) -> str:
         self.merkle_root = self.compute_merkle_root()
         # Hash with index, timestamp, previous_hash, merkle_root, nonce
+        # Hash without transacitons
         payload = str(self.to_dict()).encode()
         return sha256(payload).hexdigest()
 
