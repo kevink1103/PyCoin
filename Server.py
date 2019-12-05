@@ -59,7 +59,7 @@ def get_nodes():
 @app.route('/chain', methods=['GET'])
 def part_chain():
     response = {
-        'chain': blockchain.chain[-10:],
+        'chain': json.dumps(blockchain.chain[-10:]),
         'length': len(blockchain.chain),
     }
     return jsonify(response), 200
