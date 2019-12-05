@@ -73,16 +73,17 @@ class MerkleTree:
         return MerkleTree.merklePath(roots, next_point, path)
             
 
-    def partialValidation(self, path, target):
+    @staticmethod
+    def partialValidation(path, target):
         result = target
         for p in path:
             direction = int(p[0])
             h = p[1]
 
             if direction == 0:
-                result = self.hash(h, result)
+                result = MerkleTree.hash(h, result)
             else:
-                result = self.hash(result, h)
+                result = MerkleTree.hash(result, h)
         return result
 
 def main():
@@ -107,12 +108,24 @@ def main():
     transaction1 = Transaction("Kevin", "Chronos", "5.0")
     transaction2 = Transaction("Chronos", "Erica", "2.0")
     transaction3 = Transaction("Erica", "Kevin", "1.0")
-    transactions = [transaction1.to_json(), transaction2.to_json(), transaction3.to_json()]
+    transaction4 = Transaction("Claire", "Kevin", "1.2")
+    transaction5 = Transaction("Lora", "Chronos", "3.3")
+    transactions = [transaction1.to_json(), transaction2.to_json(), transaction3.to_json(), transaction4.to_json(), transaction5.to_json()]
     prnt(transactions)
     hashes = MerkleTree.transactionHashes(transactions)
     prnt(hashes)
     root = MerkleTree.merkleRoot(hashes)
-    # prnt(root)
+    prnt("ROOT", root)
+
+    target = transaction2.to_json()
+    targetHash = MerkleTree.transactionHashes([target])[0]
+    prnt(targetHash)
+    path = MerkleTree.merklePath(hashes, targetHash, [])
+    prnt(path)
+
+    new_root = MerkleTree.partialValidation(path, targetHash)
+    print(new_root)
+
 
 if __name__ == "__main__":
     main()

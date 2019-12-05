@@ -113,6 +113,7 @@ class Blockchain:
 
     def valid_chain(self, chain: List[str]) -> bool:
         # Check if a blockchain is valid
+        # = Check if all blocks are valid
         current_index = 0
         chain = json.loads(chain)
 
