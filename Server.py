@@ -17,13 +17,14 @@ def register_node():
     values = request.form
     node = values.get('node')
     com_port = values.get('com_port')
+    # Handle type A invalid request
+    if node is None and com_port is None:
+        print("HERE")
+        return "Error: Please supply a valid nodes", 400
     # Handle type B request
     if com_port is not None:
         blockchain.register_node(request.remote_addr + ":" + com_port)
         return "ok", 200
-    # Handle type A request
-    if node is None and com_port is None:
-        return "Error: Please supply a valid nodes", 400
     # Register node
     blockchain.register_node(node)
     # Retrieve nodes list
@@ -34,8 +35,7 @@ def register_node():
             blockchain.register_node(node)
     for new_nodes in blockchain.nodes:
         # Sending type B request
-        next_address = 'http://' + new_nodes + '/register_node'
-        requests.post(next_address, data={'com_port': com_port})
+        requests.post('http://' + new_nodes + '/register_node', data={'com_port': str(port)})
     # Check if our chain is authoritative from other nodes
     replaced = blockchain.consensus()
     if replaced:
@@ -49,6 +49,12 @@ def register_node():
             'total_nodes': [node for node in blockchain.nodes]
         }
     return jsonify(response), 201
+
+@app.route('/get_nodes', methods=['GET'])
+def get_nodes():
+    nodes = list(blockchain.nodes)
+    response = {'nodes': nodes}
+    return jsonify(response), 200
 
 @app.route('/chain', methods=['GET'])
 def part_chain():
@@ -82,12 +88,6 @@ def new_transaction():
     else:
         response = {'message': 'Invalid Transaction!'}
         return jsonify(response), 406
-
-@app.route('/get_nodes', methods=['GET'])
-def get_nodes():
-    nodes = list(blockchain.nodes)
-    response = {'nodes': nodes}
-    return jsonify(response), 200
 
 @app.route('/get_transactions', methods=['GET'])
 def get_transactions():
