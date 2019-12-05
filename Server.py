@@ -92,7 +92,7 @@ def new_transaction():
 @app.route('/get_transactions', methods=['GET'])
 def get_transactions():
     # Get transactions from transactions pool
-    transactions = blockchain.unconfirmed_transactions
+    transactions = json.dumps(blockchain.unconfirmed_transactions)
     response = {'transactions': transactions}
     return jsonify(response), 200
 
@@ -120,6 +120,7 @@ def mine():
         'timestamp': new_block.timestamp,
         'previous_hash': new_block.previous_hash,
         'hash': new_block.hash,
+        'merkle_root': new_block.merkle_root,
         'nonce': new_block.nonce,
     }
     return jsonify(response), 200
