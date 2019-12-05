@@ -33,7 +33,7 @@ class Transaction:
             h = SHA.new(payload)
             try:
                 return verifier.verify(h, binascii.unhexlify(self.signature))
-            except:
+            except ValueError:
                 return False
         else:
             return False
