@@ -15,8 +15,8 @@ class Blockchain:
     nodes = set()
 
     def __init__(self, wallet: Wallet):
-        self.unconfirmed_transactions: List[Transaction] = []
-        self.chain: List[Block] = []
+        self.unconfirmed_transactions: List[str] = []
+        self.chain: List[str] = []
         self.create_genesis_block(wallet)
 
     def create_genesis_block(self, wallet: Wallet):
@@ -111,7 +111,7 @@ class Blockchain:
         else:
             return False
 
-    def valid_chain(self, chain: List[Block]) -> bool:
+    def valid_chain(self, chain: List[str]) -> bool:
         # Check if a blockchain is valid
         current_index = 0
         chain = json.loads(chain)
@@ -123,6 +123,7 @@ class Blockchain:
                 block['transaction'],
                 block['timestamp'],
                 block['previous_hash'])
+            current_block.merkle_root = block['merkle_root']
             current_block.nonce = block['nonce']
 
             if current_index + 1 < len(chain):
