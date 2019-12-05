@@ -17,7 +17,6 @@ class Block:
         self.nonce: int = 0
 
     def to_dict(self) -> dict:
-        self.merkle_root = self.compute_merkle_root()
         return {
             'index': self.index,
             'timestamp': self.timestamp,
@@ -27,11 +26,11 @@ class Block:
         }
     
     def to_json(self) -> str:
-        self.merkle_root = self.compute_merkle_root()
         return json.dumps(self.__dict__, sort_keys=False)
 
     def compute_hash(self) -> str:
         self.merkle_root = self.compute_merkle_root()
+        # Hash with index, timestamp, previous_hash, merkle_root, nonce
         payload = str(self.to_dict()).encode()
         return sha256(payload).hexdigest()
 
