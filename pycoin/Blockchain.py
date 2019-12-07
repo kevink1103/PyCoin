@@ -15,8 +15,8 @@ class Blockchain:
     nodes = set()
 
     def __init__(self, wallet: Wallet):
-        self.unconfirmed_transactions: List[Transaction] = []
-        self.chain: List[Block] = []
+        self.unconfirmed_transactions: List[str] = []
+        self.chain: List[str] = []
         self.create_genesis_block(wallet)
 
     def create_genesis_block(self, wallet: Wallet):
@@ -41,6 +41,7 @@ class Blockchain:
         else:
             raise ValueError('Invalid URL')
 
+    # Experimental
     def check_balance(self, address: str) -> float:
         if len(self.chain) <= 0:
             return None
@@ -65,7 +66,7 @@ class Blockchain:
     def add_new_transaction(self, transaction: Transaction) -> bool:
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
-            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= transaction.value:
+            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= float(transaction.value):
                 self.unconfirmed_transactions.append(transaction.to_json())
                 return True
         return False
@@ -110,8 +111,9 @@ class Blockchain:
         else:
             return False
 
-    def valid_chain(self, chain: List[Block]) -> bool:
+    def valid_chain(self, chain: List[str]) -> bool:
         # Check if a blockchain is valid
+        # = Check if all blocks are valid
         current_index = 0
         chain = json.loads(chain)
 
@@ -122,6 +124,7 @@ class Blockchain:
                 block['transaction'],
                 block['timestamp'],
                 block['previous_hash'])
+            current_block.merkle_root = block['merkle_root']
             current_block.nonce = block['nonce']
 
             if current_index + 1 < len(chain):

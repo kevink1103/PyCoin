@@ -43,10 +43,22 @@ must be fulfilled)
 - Flask
 - Coverage
 
+```bash
+# If you have both Python 2 and 3,
+pip3 install -r requirements.txt
+# If you only have Python 3,
+pip install -r requirements.txt
+```
+
 ## Start
 
 ```bash
-python3 Server.py
+# Node with 127.0.0.1:5000
+python3 Server.py 5000
+# Node with 127.0.0.1:5001
+python3 Server.py 5001
+# Node with 127.0.0.1:5002
+python3 Server.py 5002
 ```
 
 ## Unit Test

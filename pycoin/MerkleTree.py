@@ -1,8 +1,11 @@
 # https://ihpark92.tistory.com/57
 
 from hashlib import sha256
+from typing import List
 
 from pyprnt import prnt
+
+from Transaction import Transaction
 
 # These txHashes should already be hashed
 txHashes = [
@@ -13,17 +16,24 @@ txHashes = [
 ]
 
 class MerkleTree:
-    def __init__(self, txHashes):
+    def __init__(self):
         pass
-
-    def hash(self, a, b):
+    
+    @staticmethod
+    def hash(a, b):
         a = str(a).encode()
         b = str(b).encode()
         result = sha256(a + b).hexdigest()
         return result
 
-    def merkleRoot(self, leaves):
-        prnt(leaves)
+    @staticmethod
+    def transactionHashes(transactions: List[str]):
+        return [sha256(str(transaction).encode()).hexdigest() for transaction in transactions]
+
+    @staticmethod
+    def merkleRoot(leaves):
+        # prnt("Root Calculation")
+        # prnt(leaves)
         if len(leaves) <= 1:
             return leaves[0]
 
@@ -32,13 +42,14 @@ class MerkleTree:
         while index < len(leaves):
             a = leaves[index]
             b = leaves[index+1] if index+1 < len(leaves) else leaves[index]
-            root = self.hash(a, b)
+            root = MerkleTree.hash(a, b)
             roots.append(root)
             index += 2
         
-        return self.merkleRoot(roots)
+        return MerkleTree.merkleRoot(roots)
 
-    def merklePath(self, leaves, point, path):
+    @staticmethod
+    def merklePath(leaves, point, path):
         if len(leaves) <= 1:
             return path
 
@@ -48,7 +59,7 @@ class MerkleTree:
         while index < len(leaves):
             a = leaves[index]
             b = leaves[index+1] if index+1 < len(leaves) else leaves[index]
-            root = self.hash(a, b)
+            root = MerkleTree.hash(a, b)
             roots.append(root)
 
             if a == point:
@@ -59,39 +70,62 @@ class MerkleTree:
                 next_point = root
             index += 2
 
-        return self.merklePath(roots, next_point, path)
+        return MerkleTree.merklePath(roots, next_point, path)
             
 
-    def partialValidation(self, path, target):
+    @staticmethod
+    def partialValidation(path, target):
         result = target
         for p in path:
             direction = int(p[0])
             h = p[1]
 
             if direction == 0:
-                result = self.hash(h, result)
+                result = MerkleTree.hash(h, result)
             else:
-                result = self.hash(result, h)
+                result = MerkleTree.hash(result, h)
         return result
 
 def main():
-    tree = MerkleTree(txHashes)
-    # Recursive Root Finder
-    root = tree.merkleRoot(txHashes)
-    print(root)
-    # Manual Root Finder
-    ab = tree.hash(txHashes[0], txHashes[1])
-    cd = tree.hash(txHashes[2], txHashes[3])
-    print(tree.hash(ab, cd))
+    # tree = MerkleTree(txHashes)
+    # # Recursive Root Finder
+    # root = tree.merkleRoot(txHashes)
+    # print(root)
+    # # Manual Root Finder
+    # ab = tree.hash(txHashes[0], txHashes[1])
+    # cd = tree.hash(txHashes[2], txHashes[3])
+    # print(tree.hash(ab, cd))
 
-    # Path
-    target = txHashes[1]
-    path = tree.merklePath(txHashes, target, [])
+    # # Path
+    # target = txHashes[1]
+    # path = tree.merklePath(txHashes, target, [])
+    # prnt(path)
+
+    # # Valid
+    # valid = tree.partialValidation(path, target)
+    # print(valid)
+
+    transaction1 = Transaction("Kevin", "Chronos", "5.0")
+    transaction2 = Transaction("Chronos", "Erica", "2.0")
+    transaction3 = Transaction("Erica", "Kevin", "1.0")
+    transaction4 = Transaction("Claire", "Kevin", "1.2")
+    transaction5 = Transaction("Lora", "Chronos", "3.3")
+    transactions = [transaction1.to_json(), transaction2.to_json(), transaction3.to_json(), transaction4.to_json(), transaction5.to_json()]
+    prnt(transactions)
+    hashes = MerkleTree.transactionHashes(transactions)
+    prnt(hashes)
+    root = MerkleTree.merkleRoot(hashes)
+    prnt("ROOT", root)
+
+    target = transaction2.to_json()
+    targetHash = MerkleTree.transactionHashes([target])[0]
+    prnt(targetHash)
+    path = MerkleTree.merklePath(hashes, targetHash, [])
     prnt(path)
 
-    # Valid
-    valid = tree.partialValidation(path, target)
-    print(valid)
+    new_root = MerkleTree.partialValidation(path, targetHash)
+    print(new_root)
+
 
 if __name__ == "__main__":
     main()

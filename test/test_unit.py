@@ -137,7 +137,7 @@ class TestBlock(unittest.TestCase):
         content = block.to_dict()
 
         self.assertIsInstance(content, dict)
-        self.assertEqual(list(content.keys()), ["index", "transaction", "timestamp", "previous_hash", "nonce"])
+        self.assertEqual(list(content.keys()), ["index", "timestamp", "previous_hash", "merkle_root", "nonce"])
 
     def test_block_to_json(self):
         wallet = Wallet()
