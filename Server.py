@@ -1,5 +1,6 @@
 import sys
 import json
+from hashlib import sha256
 
 import requests
 from pyprnt import prnt
@@ -146,6 +147,33 @@ def mine():
         'nonce': new_block.nonce,
     }
     return jsonify(response), 200
+
+@app.route('/merkle_path', methods=['POST'])
+def merkle_path():
+    values = request.form
+    transaction = Transaction(values.get('sender'), values.get('recipient'), values.get('value'))
+    if values.get('signature'):
+        transaction.signature = values.get('signature')
+    path = blockchain.merkle_path(transaction)
+
+    if len(path) > 0:
+        root = path[-1]
+        path = path[:-1]
+
+    return jsonify(path), 200
+
+@app.route('/partial_validation', methods=['POST'])
+def partial_validation():
+    values = request.form
+    root = values.get('root')
+    path = json.loads(values.get('path'))
+    transaction = Transaction(values.get('sender'), values.get('recipient'), values.get('value'))
+    if values.get('signature'):
+        transaction.signature = values.get('signature')
+    h = sha256(str(transaction.to_json()).encode()).hexdigest()
+    new_root = blockchain.partialValidation(path, h)
+    result = root == new_root
+    return jsonify(result), 200
 
 @app.route('/shutdown', methods=['POST'])
 def shutdown():

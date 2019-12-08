@@ -1,6 +1,7 @@
 import datetime
 import json
 from urllib.parse import urlparse
+from hashlib import sha256
 from typing import List, Union
 
 import requests
@@ -50,13 +51,15 @@ class Blockchain:
 
         for block in self.chain:
             block = json.loads(block)
-            transactions = [json.loads(transaction) for transaction in block["transaction"]]
+            transactions = block["transaction"]
             for transaction in transactions:
+                transaction = json.loads(transaction)
                 if transaction["recipient"] == address:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
                     balance -= float(transaction["value"])
         for transaction in self.unconfirmed_transactions:
+            transaction = json.loads(transaction)
             if transaction["recipient"] == address:
                     balance += float(transaction["value"])
             elif transaction["sender"] == address:
@@ -169,3 +172,75 @@ class Blockchain:
             self.chain = json.loads(new_chain)
             return True
         return False
+
+    def hash_sum(self, a, b):
+        a = str(a).encode()
+        b = str(b).encode()
+        result = sha256(a + b).hexdigest()
+        return result
+
+    def merkle_path(self, transaction):
+        path = []
+        transactionHash = sha256(str(transaction.to_json()).encode()).hexdigest()
+        block = self.search_block_with_transaction(transactionHash)
+        leaves = []
+        if block:
+            for trans in block['transaction']:
+                trans = json.loads(trans)
+                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'])
+                if 'signature' in trans.keys():
+                    new_trans.signature = trans['signature']
+                new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()
+                leaves.append(new_transHash)
+            path = self._merklePath(leaves, transactionHash, [])
+            path.append(block['merkle_root'])
+        return path
+
+    def search_block_with_transaction(self, transactionHash):
+        fullchain = [json.loads(block) for block in self.chain]
+        for block in fullchain[::-1]:
+            for trans in block['transaction']:
+                trans = json.loads(trans)
+                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'])
+                if 'signature' in trans.keys():
+                    new_trans.signature = trans['signature']
+                new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()
+                
+                if transactionHash == new_transHash:
+                    return block
+        return False
+
+    def _merklePath(self, leaves, point, path):
+        if len(leaves) <= 1:
+            return path
+
+        roots = []
+        next_point = ""
+        index = 0
+        while index < len(leaves):
+            a = leaves[index]
+            b = leaves[index+1] if index+1 < len(leaves) else leaves[index]
+            root = self.hash_sum(a, b)
+            roots.append(root)
+
+            if a == point:
+                path.append(["1", b])
+                next_point = root
+            elif b == point:
+                path.append(["0", a])
+                next_point = root
+            index += 2
+
+        return self._merklePath(roots, next_point, path)
+
+    def partialValidation(self, path, target):
+        result = target
+        for p in path:
+            direction = int(p[0])
+            h = p[1]
+
+            if direction == 0:
+                result = self.hash_sum(h, result)
+            else:
+                result = self.hash_sum(result, h)
+        return result
