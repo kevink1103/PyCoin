@@ -61,7 +61,11 @@ python3 Server.py 5001
 python3 Server.py 5002
 ```
 
-## Unit Test
+## Test
+
+Before initiating test, make sure all 3 nodes are running with ports 5000, 5001, and 5002.  
+The integration test fails for very first time for unknown reason.  
+Please run the test twice.
 
 ```bash
 python3 -m unittest
