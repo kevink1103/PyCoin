@@ -71,7 +71,6 @@ class MerkleTree:
             index += 2
 
         return MerkleTree.merklePath(roots, next_point, path)
-            
 
     @staticmethod
     def partialValidation(path, target):

@@ -1,5 +1,6 @@
 import sys
 import json
+from hashlib import sha256
 
 import requests
 from pyprnt import prnt
@@ -11,6 +12,14 @@ from pycoin import Block
 from pycoin import Blockchain
 
 app = Flask(__name__)
+myWallet = Wallet()
+blockchain = Blockchain(myWallet)
+
+@app.route('/status', methods=['GET'])
+def status():
+    if myWallet and blockchain:
+        return "alive", 200
+    return "dead", 400
 
 @app.route('/register_node', methods=['POST'])
 def register_node():
@@ -19,7 +28,6 @@ def register_node():
     com_port = values.get('com_port')
     # Handle type A invalid request
     if node is None and com_port is None:
-        print("HERE")
         return "Error: Please supply a valid nodes", 400
     # Handle type B request
     if com_port is not None:
@@ -72,14 +80,29 @@ def full_chain():
     }
     return jsonify(response), 200
 
+@app.route('/lightweight', methods=['GET'])
+def lightweight():
+    fullchain = [json.loads(block) for block in blockchain.chain]
+    lightweight = []
+    for block in fullchain:
+        block_object = Block(block['index'], block['transaction'], block['timestamp'], block['previous_hash'])
+        block_object.merkle_root = block['merkle_root']
+        block_object.nonce = block['nonce']
+        lightweight.append(block_object.to_dict())
+    response = {
+        'chain': json.dumps(lightweight),
+        'length': len(lightweight)
+    }
+    return jsonify(response), 200
+
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
     values = request.form
-    required = ['recipient_address', 'amount']
+    required = ['recipient_address', 'value']
     # Check that the required fields are in the POST data
     if not all(k in values for k in required):
         return 'Missing values', 400
-    transaction = Transaction(myWallet.pubkey, values['recipient_address'], values['amount'])
+    transaction = Transaction(myWallet.pubkey, values['recipient_address'], values['value'])
     transaction.add_signature(myWallet.sign_transaction(transaction))
     transaction_result = blockchain.add_new_transaction(transaction)
     if transaction_result:
@@ -125,10 +148,42 @@ def mine():
     }
     return jsonify(response), 200
 
+@app.route('/merkle_path', methods=['POST'])
+def merkle_path():
+    values = request.form
+    transaction = Transaction(values.get('sender'), values.get('recipient'), values.get('value'))
+    if values.get('signature'):
+        transaction.signature = values.get('signature')
+    path = blockchain.merkle_path(transaction)
+
+    if len(path) > 0:
+        root = path[-1]
+        path = path[:-1]
+
+    return jsonify(path), 200
+
+@app.route('/partial_validation', methods=['POST'])
+def partial_validation():
+    values = request.form
+    root = values.get('root')
+    path = json.loads(values.get('path'))
+    transaction = Transaction(values.get('sender'), values.get('recipient'), values.get('value'))
+    if values.get('signature'):
+        transaction.signature = values.get('signature')
+    h = sha256(str(transaction.to_json()).encode()).hexdigest()
+    new_root = blockchain.partialValidation(path, h)
+    result = root == new_root
+    return jsonify(result), 200
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+    return "Shutting down...", 200
+
 if __name__ == "__main__":
-    myWallet = Wallet()
-    blockchain = Blockchain(myWallet)
-    
     # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
     # dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))
     # blockchain.add_new_transaction(dummy_trans)
@@ -137,6 +192,7 @@ if __name__ == "__main__":
     # print(bal)
     # prnt(blockchain.last_block, enable=False)
     # port = 5000
+
     port = int(sys.argv[1])
     print(port)
     app.run(host='127.0.0.1', port=port, debug=True)
