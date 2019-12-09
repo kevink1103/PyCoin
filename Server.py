@@ -159,7 +159,6 @@ def merkle_path():
     if len(path) > 0:
         root = path[-1]
         path = path[:-1]
-
     return jsonify(path), 200
 
 @app.route('/partial_validation', methods=['POST'])
