@@ -95,6 +95,13 @@ def lightweight():
     }
     return jsonify(response), 200
 
+@app.route('/check_balance', methods=['POST'])
+def check_balance():
+    values = request.form
+    address = values.get('address')
+    balance = blockchain.check_balance(address)
+    return jsonify(balance), 200
+
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
     values = request.form
@@ -104,6 +111,23 @@ def new_transaction():
         return 'Missing values', 400
     transaction = Transaction(myWallet.pubkey, values['recipient_address'], values['value'])
     transaction.add_signature(myWallet.sign_transaction(transaction))
+    transaction_result = blockchain.add_new_transaction(transaction)
+    if transaction_result:
+        response = {'message': 'Transaction will be added to Block'}
+        return jsonify(response), 201
+    else:
+        response = {'message': 'Invalid Transaction!'}
+        return jsonify(response), 406
+
+@app.route('/new_transaction_signed', methods=['POST'])
+def new_transaction_signed():
+    values = request.form
+    required = ['sender', 'recipient_address', 'value', 'signature']
+    # Check that the required fields are in the POST data
+    if not all(k in values for k in required):
+        return 'Missing values', 400
+    transaction = Transaction(values['sender'], values['recipient_address'], values['value'])
+    transaction.signature = values['signature']
     transaction_result = blockchain.add_new_transaction(transaction)
     if transaction_result:
         response = {'message': 'Transaction will be added to Block'}
