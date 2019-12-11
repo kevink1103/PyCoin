@@ -5,6 +5,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA
 
+
 class Transaction:
     def __init__(self, sender, recipient, value):
         self.sender = sender
@@ -21,7 +22,7 @@ class Transaction:
 
     def to_json(self) -> str:
         return json.dumps(self.__dict__, sort_keys=False)
-    
+
     def add_signature(self, signature) -> None:
         self.signature = signature
 

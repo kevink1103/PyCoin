@@ -15,6 +15,8 @@ app = Flask(__name__)
 myWallet = Wallet()
 blockchain = Blockchain(myWallet)
 
+# TODO: Able to change difficulty when the hash power of the network change
+# Some APIs need to be edited to complete the above task
 
 @app.route('/status', methods=['GET'])
 def status():

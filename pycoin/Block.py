@@ -6,7 +6,9 @@ from Crypto.Hash import SHA
 
 from pycoin import Transaction
 
+
 class Block:
+    # TODO: Able to change difficulty when the hash power of the network change
     def __init__(self, index: int, transaction: List[str], timestamp: str, previous_hash: str):
         self.index: int = index
         self.transaction: List[str] = transaction
@@ -15,6 +17,7 @@ class Block:
         self.hash: str = "0"
         self.merkle_root: str = ""
         self.nonce: int = 0
+        # self.difficulty = 2   # initial difficulty
 
     def to_dict(self) -> dict:
         return {
@@ -23,8 +26,9 @@ class Block:
             'previous_hash': self.previous_hash,
             'merkle_root': self.merkle_root,
             'nonce': self.nonce
+            # 'difficulty': self.difficulty
         }
-    
+
     def to_json(self) -> str:
         return json.dumps(self.__dict__, sort_keys=False)
 
@@ -57,9 +61,9 @@ class Block:
         index = 0
         while index < len(leaves):
             a = leaves[index]
-            b = leaves[index+1] if index+1 < len(leaves) else leaves[index]
+            b = leaves[index + 1] if index + 1 < len(leaves) else leaves[index]
             root = self.hash_sum(a, b)
             roots.append(root)
             index += 2
-        
+
         return self.merkleRoot(roots)

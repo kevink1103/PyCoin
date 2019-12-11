@@ -12,6 +12,8 @@ from pycoin import Transaction
 from pycoin import Block
 
 class Blockchain:
+    # TODO: Able to change difficulty when the hash power of the network change
+    # difficulty should be defined in the Block class instead to complete the above task
     difficulty = 2
     nodes = set()
 
@@ -66,6 +68,7 @@ class Blockchain:
                 balance -= float(transaction["value"])
         return balance
 
+    # TODO: Able to charge transaction fee from the sender of the transaction
     def add_new_transaction(self, transaction: Transaction) -> bool:
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
