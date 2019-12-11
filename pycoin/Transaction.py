@@ -7,16 +7,16 @@ from Crypto.Hash import SHA
 
 # EE4017 Lab 4
 
-
 class Transaction:
-    # constructor to define the sender, recipient and value in a transaction
     def __init__(self, sender, recipient, value):
+        '''constructor to define the sender, recipient and value in a transactiom'''
         self.sender = sender
         self.recipient = recipient
         self.value = value
 
-    # method to dump all contents (except signature) in the transaction as a dictionary
+    
     def to_dict(self) -> dict:
+        '''method to dump all contents (except signature) in the transaction as a dictionary'''
         # Signature is not included here
         return {
             'sender': self.sender,
@@ -24,17 +24,17 @@ class Transaction:
             'value': self.value
         }
 
-    # json encoding method
     def to_json(self) -> str:
+        '''method to generate JSON format from all contents of the transaction'''
         return json.dumps(self.__dict__, sort_keys=False)
 
-    # method to add a signature to the transaction
     def add_signature(self, signature) -> None:
+        '''method to add a signature to the transaction'''
         self.signature = signature
 
-    # method to verify the signature in the transaction
     def verify_transaction_signature(self) -> bool:
-        if hasattr(self, 'signature'):
+        '''method to verify the signature in the transaction'''
+        if hasattr(self, 'signature'): # check if signature exists
             pubkey = RSA.importKey(binascii.unhexlify(self.sender))
             verifier = PKCS1_v1_5.new(pubkey)
             payload = str(self.to_dict()).encode('utf-8')

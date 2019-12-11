@@ -13,33 +13,35 @@ from pycoin import Block
 
 # EE4017 Lab 5
 
+# TODO: Able to change difficulty when the hash power of the network change
+# difficulty should be defined in the Block class instead to complete the above task
 
 class Blockchain:
-    # TODO: Able to change difficulty when the hash power of the network change
-    # difficulty should be defined in the Block class instead to complete the above task
     difficulty = 2
     nodes = set()
 
-    # The blockchain class has 2 important elements: unconfirmed transactions and the blockchain itself.
-    # The first block in the blockchain is the Genesis block (the first block ever).
     def __init__(self, wallet: Wallet):
+        '''
+        The blockchain class has 2 important elements: unconfirmed transactions and the blockchain itself.
+        The first block in the blockchain is the Genesis block (the first block ever).
+        '''
         self.unconfirmed_transactions: List[str] = []
         self.chain: List[str] = []
-        self.create_genesis_block(wallet)
 
-    # method to create and puts the genesis block into the blockchain
     def create_genesis_block(self, wallet: Wallet):
+        '''method to create and puts the genesis block into the blockchain'''
         block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         genesis_block.hash = self.proof_of_work(genesis_block)
         self.chain.append(genesis_block.to_json())
 
-    # The last block could be frequently asked by another node.
     @property  # getter of the last block
     def last_block(self):
+        '''get the very last block'''
         return json.loads(self.chain[-1])
     
     def register_node(self, node_url):
+        '''register new node by parsing url'''
         # Checking node_url has valid format
         parsed_url = urlparse(node_url)
         if parsed_url.netloc:
@@ -53,8 +55,14 @@ class Blockchain:
 
     # ------------------------------------------------------------------------------------------------------------------
     # New methods beyond EE4017 labs
-    # Experimental
+
     def check_balance(self, address: str) -> float:
+        '''
+        check balance of given wallet address
+        by looping through all blocks in blockchain and
+        all unconfirmed transactions
+        this algorithm is used in etherium
+        '''
         if len(self.chain) <= 0:
             return None
 
@@ -81,7 +89,12 @@ class Blockchain:
     # TODO: Able to charge transaction fee from the sender of the transaction
     # method to handle new transactions
     # we need to check the signature before adding it to the list of unconfirmed transactions pool.
+
     def add_new_transaction(self, transaction: Transaction) -> bool:
+        '''
+        add a new transaction to the block
+        after checking balance
+        '''
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
             if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= float(transaction.value):
@@ -89,8 +102,8 @@ class Blockchain:
                 return True
         return False
 
-    # Proof-of-Work controls the speed of creating blocks
     def proof_of_work(self, block: Block) -> str:
+        '''Proof-of-Work to find out the correct nonce'''
         block.nonce = 0
         computed_hash = block.compute_hash()
         # Keep trying and increasing the nonce value
@@ -100,14 +113,20 @@ class Blockchain:
             computed_hash = block.compute_hash()
         return computed_hash
 
-    # we might receive blocks from another node, a validation method is also needed.
-    # A valid proof should have a valid hash starting with the corresponding difficulty number of 0
-    # (e.g. difficulty = 2; hash = 00abcd...), and the testing block's hash should match with the computed hash.
     def is_valid_proof(self, block: Block, block_hash: str) -> bool:
+        '''
+        we might receive blocks from another node, a validation method is also needed.
+        a valid proof should have a valid hash starting with the corresponding difficulty number of 0
+        (e.g. difficulty = 2; hash = 00abcd...), and the testing block's hash should match with the computed hash.
+        '''
         return (block_hash.startswith('0' * Blockchain.difficulty) and (block_hash == block.compute_hash()))
 
-    # method to check if a new block could be added at the end of the blockchain
     def add_block(self, block: Block, proof: str) -> bool:
+        '''
+        method to check if a new block could be added at the end of the blockchain
+        1. by checking that the new block from parameter is the next block from our last block
+        2. by checking the new block and the given hash (from proof-of-work) is legit
+        '''
         previous_hash = self.last_block['hash']
         if previous_hash != block.previous_hash:
             return False
@@ -117,10 +136,12 @@ class Blockchain:
         self.chain.append(block.to_json())
         return True
 
-    # a mining method to generate new blocks and claim the block reward
-    # This method writes unconfirmed transactions into blocks by using the proof-of-work method.
-    # use JSON to store transaction in the blockchain because JSON format is easy to read for computer programs.
     def mine(self, wallet: Wallet) -> Union[Block, bool]:
+        '''
+        a mining method to generate new blocks and claim the block reward
+        this method confirms all unconfirmed transactions into blocks by using the proof-of-work method.
+        convert to JSON to store transaction in the blockchain because JSON format
+        '''
         block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0")
         self.unconfirmed_transactions.insert(0, block_reward.to_json())
         if not self.unconfirmed_transactions:
@@ -140,8 +161,7 @@ class Blockchain:
             return False
 
     def valid_chain(self, chain: List[str]) -> bool:
-        # Check if a blockchain is valid
-        # = Check if all blocks are valid
+        '''check if a blockchain (all blocks) is valid'''
         current_index = 0
         chain = json.loads(chain)
 
@@ -178,6 +198,7 @@ class Blockchain:
         return True
 
     def consensus(self) -> bool:
+        '''propagate across all registered nodes'''
         neighbours = self.nodes
         new_chain = None
         # We're only looking for chains longer than ours
@@ -199,12 +220,14 @@ class Blockchain:
         return False
 
     def hash_sum(self, a, b):
+        '''simple method to get sum hash of two strings'''
         a = str(a).encode()
         b = str(b).encode()
         result = sha256(a + b).hexdigest()
         return result
 
-    def merkle_path(self, transaction):
+    def merkle_path(self, transaction: Transaction):
+        '''return merkle path of given transaction'''
         path = []
         transactionHash = sha256(str(transaction.to_json()).encode()).hexdigest()
         block = self.search_block_with_transaction(transactionHash)
@@ -222,6 +245,7 @@ class Blockchain:
         return path
 
     def search_block_with_transaction(self, transactionHash):
+        '''return block that matches given transaction hash'''
         fullchain = [json.loads(block) for block in self.chain]
         for block in fullchain[::-1]:
             for trans in block['transaction']:
@@ -235,8 +259,11 @@ class Blockchain:
                     return block
         return False
 
-    # private attribute: Merkle Path
     def _merklePath(self, leaves, point, path):
+        '''
+        recursive method to generate merkle path from given transaction hashes (leaves)
+        and given transaction hash (point)
+        '''
         if len(leaves) <= 1:
             return path
 
@@ -260,6 +287,10 @@ class Blockchain:
         return self._merklePath(roots, next_point, path)
 
     def partialValidation(self, path, target):
+        '''
+        method to go through all the path with given transaction hash (target)
+        and return final merkle root
+        '''
         result = target
         for p in path:
             direction = int(p[0])
