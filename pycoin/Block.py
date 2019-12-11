@@ -6,8 +6,8 @@ from Crypto.Hash import SHA
 
 from pycoin import Transaction
 
-# EE4017 Lab 5
 
+# EE4017 Lab 5
 
 class Block:
     """
@@ -22,11 +22,10 @@ class Block:
      8. Difficulty Level (For changing difficulty when the hash power of the network change)
         [we need to calculate hash value and nonce after adding the transactions.]
     """
-    """
-    TODO: Able to change difficulty when the hash power of the network change
-    """
-    # constructor to create a block
+
+    # TODO: Able to change difficulty when the hash power of the network change
     def __init__(self, index: int, transaction: List[str], timestamp: str, previous_hash: str):
+        '''constructor to create a block'''
         self.index: int = index
         self.transaction: List[str] = transaction
         self.timestamp: str = timestamp
@@ -36,8 +35,8 @@ class Block:
         self.nonce: int = 0
         # self.difficulty = 2   # initial difficulty
 
-    # method to dump all contents in the block
     def to_dict(self) -> dict:
+        '''method to dump only block header to compute hash'''
         return {
             'index': self.index,
             'timestamp': self.timestamp,
@@ -47,14 +46,16 @@ class Block:
             # 'difficulty': self.difficulty
         }
 
-    # method to transfer blocks to other peers using json format.
     def to_json(self) -> str:
+        '''method to export block in json format to transfer to other peers'''
         return json.dumps(self.__dict__, sort_keys=False)
 
-    # method to calculate the hash value of a block
-    # we don’t need the empty hash value as the input for the hash function,
-    # so a method that dumps selected variables is needed.
     def compute_hash(self) -> str:
+        '''
+        method to calculate the hash value of a block
+        we don’t need the empty hash value as the input for the hash function,
+        we use self.to_dict() to dump only the block header as payload.
+        '''
         self.merkle_root = self.compute_merkle_root()
         # Hash with index, timestamp, previous_hash, merkle_root, nonce
         # Hash without transactions
@@ -66,20 +67,24 @@ class Block:
     # Implement partial validation by requesting Merkle Path from light node to full node
 
     def compute_merkle_root(self) -> str:
+        '''method to return merkle root of all transaction in this block'''
         transactionHashes = self.transactionHashes(self.transaction)
         root = self.merkleRoot(transactionHashes)
         return root
 
-    def hash_sum(self, a, b):
+    def hash_sum(self, a, b) -> str:
+        '''simple method to get sum hash of two strings'''
         a = str(a).encode()
         b = str(b).encode()
         result = sha256(a + b).hexdigest()
         return result
 
-    def transactionHashes(self, transactions: List[str]):
+    def transactionHashes(self, transactions: List[str]) -> List[str]:
+        '''method to return hashed string from given list of transaction strings'''
         return [sha256(str(transaction).encode()).hexdigest() for transaction in transactions]
 
     def merkleRoot(self, leaves: List[str]):
+        '''recursive method to calculate merkle root'''
         if len(leaves) <= 1:
             return leaves[0]
 
