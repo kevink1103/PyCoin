@@ -11,24 +11,31 @@ from pycoin import Wallet
 from pycoin import Transaction
 from pycoin import Block
 
+# EE4017 Lab 5
+
+
 class Blockchain:
     # TODO: Able to change difficulty when the hash power of the network change
     # difficulty should be defined in the Block class instead to complete the above task
     difficulty = 2
     nodes = set()
 
+    # The blockchain class has 2 important elements: unconfirmed transactions and the blockchain itself.
+    # The first block in the blockchain is the Genesis block (the first block ever).
     def __init__(self, wallet: Wallet):
         self.unconfirmed_transactions: List[str] = []
         self.chain: List[str] = []
         self.create_genesis_block(wallet)
 
+    # method to create and puts the genesis block into the blockchain
     def create_genesis_block(self, wallet: Wallet):
         block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         genesis_block.hash = self.proof_of_work(genesis_block)
         self.chain.append(genesis_block.to_json())
 
-    @property
+    # The last block could be frequently asked by another node.
+    @property  # getter of the last block
     def last_block(self):
         return json.loads(self.chain[-1])
     
@@ -44,6 +51,8 @@ class Blockchain:
         else:
             raise ValueError('Invalid URL')
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # New methods beyond EE4017 labs
     # Experimental
     def check_balance(self, address: str) -> float:
         if len(self.chain) <= 0:
@@ -67,8 +76,11 @@ class Blockchain:
             elif transaction["sender"] == address:
                 balance -= float(transaction["value"])
         return balance
+    # ------------------------------------------------------------------------------------------------------------------
 
     # TODO: Able to charge transaction fee from the sender of the transaction
+    # method to handle new transactions
+    # we need to check the signature before adding it to the list of unconfirmed transactions pool.
     def add_new_transaction(self, transaction: Transaction) -> bool:
         if transaction.verify_transaction_signature():
             # Check balance before confirming a transaction
@@ -77,17 +89,24 @@ class Blockchain:
                 return True
         return False
 
+    # Proof-of-Work controls the speed of creating blocks
     def proof_of_work(self, block: Block) -> str:
         block.nonce = 0
         computed_hash = block.compute_hash()
+        # Keep trying and increasing the nonce value
+        # until the new hash value meets the difficulty level restriction (Solve the hash puzzle)
         while not computed_hash.startswith('0' * Blockchain.difficulty):
             block.nonce += 1
             computed_hash = block.compute_hash()
         return computed_hash
 
+    # we might receive blocks from another node, a validation method is also needed.
+    # A valid proof should have a valid hash starting with the corresponding difficulty number of 0
+    # (e.g. difficulty = 2; hash = 00abcd...), and the testing block's hash should match with the computed hash.
     def is_valid_proof(self, block: Block, block_hash: str) -> bool:
         return (block_hash.startswith('0' * Blockchain.difficulty) and (block_hash == block.compute_hash()))
-    
+
+    # method to check if a new block could be added at the end of the blockchain
     def add_block(self, block: Block, proof: str) -> bool:
         previous_hash = self.last_block['hash']
         if previous_hash != block.previous_hash:
@@ -98,6 +117,9 @@ class Blockchain:
         self.chain.append(block.to_json())
         return True
 
+    # a mining method to generate new blocks and claim the block reward
+    # This method writes unconfirmed transactions into blocks by using the proof-of-work method.
+    # use JSON to store transaction in the blockchain because JSON format is easy to read for computer programs.
     def mine(self, wallet: Wallet) -> Union[Block, bool]:
         block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0")
         self.unconfirmed_transactions.insert(0, block_reward.to_json())
@@ -213,6 +235,7 @@ class Blockchain:
                     return block
         return False
 
+    # private attribute: Merkle Path
     def _merklePath(self, leaves, point, path):
         if len(leaves) <= 1:
             return path

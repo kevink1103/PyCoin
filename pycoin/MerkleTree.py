@@ -104,6 +104,7 @@ def main():
     # valid = tree.partialValidation(path, target)
     # print(valid)
 
+    # Transaction(sender, recipient, transferred value of coins)
     transaction1 = Transaction("Kevin", "Chronos", "5.0")
     transaction2 = Transaction("Chronos", "Erica", "2.0")
     transaction3 = Transaction("Erica", "Kevin", "1.0")

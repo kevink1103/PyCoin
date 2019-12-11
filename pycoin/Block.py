@@ -6,9 +6,24 @@ from Crypto.Hash import SHA
 
 from pycoin import Transaction
 
+# EE4017 Lab 5
+
 
 class Block:
+    """
+    a block consists of 6 parameters including
+     1. Index,
+     2. Transactions,
+     3. Timestamp
+     4. Hash value of the last block
+     5. Hash value of this block
+     6. Root of a Merkle tree containing transaction data
+     7. Nonce value
+     8. Difficulty Level (For changing difficulty when the hash power of the network change)
+        [we need to calculate hash value and nonce after adding the transactions.]
+    """
     # TODO: Able to change difficulty when the hash power of the network change
+    # constructor to create a block
     def __init__(self, index: int, transaction: List[str], timestamp: str, previous_hash: str):
         self.index: int = index
         self.transaction: List[str] = transaction
@@ -19,6 +34,7 @@ class Block:
         self.nonce: int = 0
         # self.difficulty = 2   # initial difficulty
 
+    # method to dump all contents in the block
     def to_dict(self) -> dict:
         return {
             'index': self.index,
@@ -29,15 +45,22 @@ class Block:
             # 'difficulty': self.difficulty
         }
 
+    # method to transfer blocks to other peers using json format.
     def to_json(self) -> str:
         return json.dumps(self.__dict__, sort_keys=False)
 
+    # method to calculate the hash value of a block
+    # we don’t need the empty hash value as the input for the hash function,
+    # so a method that dumps selected variables is needed.
     def compute_hash(self) -> str:
         self.merkle_root = self.compute_merkle_root()
         # Hash with index, timestamp, previous_hash, merkle_root, nonce
         # Hash without transacitons
         payload = str(self.to_dict()).encode()
         return sha256(payload).hexdigest()
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # New methods beyond EE4017 labs
 
     def compute_merkle_root(self) -> str:
         transactionHashes = self.transactionHashes(self.transaction)
