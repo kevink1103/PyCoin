@@ -18,6 +18,7 @@ class Blockchain:
     # TODO: Able to change difficulty when the hash power of the network change
     # difficulty should be defined in the Block class instead to complete the above task
     difficulty = 2
+    # store the IP addresses of other nodes in the cryptocurrency network
     nodes = set()
 
     # The blockchain class has 2 important elements: unconfirmed transactions and the blockchain itself.
@@ -31,6 +32,7 @@ class Blockchain:
     def create_genesis_block(self, wallet: Wallet):
         block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
+        # Hash of genesis block cannot be computed directly, proof of work is needed
         genesis_block.hash = self.proof_of_work(genesis_block)
         self.chain.append(genesis_block.to_json())
 
@@ -38,7 +40,8 @@ class Blockchain:
     @property  # getter of the last block
     def last_block(self):
         return json.loads(self.chain[-1])
-    
+
+    # method to register the new node
     def register_node(self, node_url):
         # Checking node_url has valid format
         parsed_url = urlparse(node_url)
@@ -52,7 +55,9 @@ class Blockchain:
             raise ValueError('Invalid URL')
 
     # ------------------------------------------------------------------------------------------------------------------
-    # New methods beyond EE4017 labs
+    # New method beyond EE4017 labs
+    # Check the balance before confirming a transaction (simple balance checking like Etherium)
+
     # Experimental
     def check_balance(self, address: str) -> float:
         if len(self.chain) <= 0:
@@ -76,9 +81,11 @@ class Blockchain:
             elif transaction["sender"] == address:
                 balance -= float(transaction["value"])
         return balance
-    # ------------------------------------------------------------------------------------------------------------------
 
-    # TODO: Able to charge transaction fee from the sender of the transaction
+    # ------------------------------------------------------------------------------------------------------------------
+    """
+    TODO: Able to charge transaction fee from the sender of the transaction
+    """
     # method to handle new transactions
     # we need to check the signature before adding it to the list of unconfirmed transactions pool.
     def add_new_transaction(self, transaction: Transaction) -> bool:
@@ -139,6 +146,8 @@ class Blockchain:
         else:
             return False
 
+    # In a cryptocurrency network, we might receive a full of copy of the chain from other nodes.
+    # We should validate this chain before replacing it with ours.
     def valid_chain(self, chain: List[str]) -> bool:
         # Check if a blockchain is valid
         # = Check if all blocks are valid
@@ -177,6 +186,18 @@ class Blockchain:
             current_index += 1
         return True
 
+    # Since a cryptocurrency network is decentralized, no entity can define rules.
+    # Therefore, all clients in a blockchain network must have a consensus on the rules before deployment.
+    # These consensus rules must be hard coded into the client.
+
+    # Consensus is important in a cryptocurrency network because it has economic value,
+    # which could bring potential conflict of interest.
+
+    # Use proof-of-work as consensus algorithm,
+    # Need some more rules to solve conflict when there are multiple blocks in the network.
+    # 2 Rules:
+    #   - Broadcast a new block to the network once found
+    #   - Longest chain is authoritative
     def consensus(self) -> bool:
         neighbours = self.nodes
         new_chain = None
@@ -197,6 +218,10 @@ class Blockchain:
             self.chain = json.loads(new_chain)
             return True
         return False
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # New methods beyond EE4017 labs
+    # Implement partial validation by requesting Merkle Path from light node to full node
 
     def hash_sum(self, a, b):
         a = str(a).encode()
@@ -230,7 +255,7 @@ class Blockchain:
                 if 'signature' in trans.keys():
                     new_trans.signature = trans['signature']
                 new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()
-                
+
                 if transactionHash == new_transHash:
                     return block
         return False
