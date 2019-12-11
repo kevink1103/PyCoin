@@ -15,11 +15,15 @@ app = Flask(__name__)
 myWallet = Wallet()
 blockchain = Blockchain(myWallet)
 
+# TODO: Able to change difficulty when the hash power of the network change
+# Some APIs need to be edited to complete the above task
+
 @app.route('/status', methods=['GET'])
 def status():
     if myWallet and blockchain:
         return "alive", 200
     return "dead", 400
+
 
 @app.route('/register_node', methods=['POST'])
 def register_node():
@@ -58,11 +62,13 @@ def register_node():
         }
     return jsonify(response), 201
 
+
 @app.route('/get_nodes', methods=['GET'])
 def get_nodes():
     nodes = list(blockchain.nodes)
     response = {'nodes': nodes}
     return jsonify(response), 200
+
 
 @app.route('/chain', methods=['GET'])
 def part_chain():
@@ -72,6 +78,7 @@ def part_chain():
     }
     return jsonify(response), 200
 
+
 @app.route('/fullchain', methods=['GET'])
 def full_chain():
     response = {
@@ -79,6 +86,7 @@ def full_chain():
         'length': len(blockchain.chain),
     }
     return jsonify(response), 200
+
 
 @app.route('/lightweight', methods=['GET'])
 def lightweight():
@@ -95,6 +103,7 @@ def lightweight():
     }
     return jsonify(response), 200
 
+
 @app.route('/check_balance', methods=['POST'])
 def check_balance():
     values = request.form
@@ -105,6 +114,7 @@ def check_balance():
     address = values.get('address')
     balance = blockchain.check_balance(address)
     return jsonify(balance), 200
+
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
@@ -123,6 +133,7 @@ def new_transaction():
         response = {'message': 'Invalid Transaction!'}
         return jsonify(response), 406
 
+
 @app.route('/new_transaction_signed', methods=['POST'])
 def new_transaction_signed():
     values = request.form
@@ -140,12 +151,14 @@ def new_transaction_signed():
         response = {'message': 'Invalid Transaction!'}
         return jsonify(response), 406
 
+
 @app.route('/get_transactions', methods=['GET'])
 def get_transactions():
     # Get transactions from transactions pool
     transactions = json.dumps(blockchain.unconfirmed_transactions)
     response = {'transactions': transactions}
     return jsonify(response), 200
+
 
 @app.route('/consensus', methods=['GET'])
 def consensus():
@@ -159,6 +172,7 @@ def consensus():
             'message': 'Our chain is authoritative'
         }
     return jsonify(response), 200
+
 
 @app.route('/mine', methods=['GET'])
 def mine():
@@ -175,6 +189,7 @@ def mine():
         'nonce': new_block.nonce,
     }
     return jsonify(response), 200
+
 
 @app.route('/merkle_path', methods=['POST'])
 def merkle_path():
@@ -193,6 +208,7 @@ def merkle_path():
         path = path[:-1]
     return jsonify(path), 200
 
+
 @app.route('/partial_validation', methods=['POST'])
 def partial_validation():
     values = request.form
@@ -209,6 +225,7 @@ def partial_validation():
     new_root = blockchain.partialValidation(path, h)
     result = root == new_root
     return jsonify(result), 200
+
 
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
