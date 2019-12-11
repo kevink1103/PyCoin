@@ -11,11 +11,10 @@ from pycoin import Wallet
 from pycoin import Transaction
 from pycoin import Block
 
-
 # EE4017 Lab 5
 
 # TODO: Able to change difficulty when the hash power of the network change
-# difficulty should be defined in the Block class instead to complete the above task
+#       difficulty should be defined in the Block class instead to complete the above task
 
 class Blockchain:
     difficulty = 2

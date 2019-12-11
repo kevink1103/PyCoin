@@ -8,7 +8,6 @@ from Crypto.Hash import SHA
 
 from pycoin import Transaction
 
-
 # EE4017 Lab 4
 
 class Wallet:

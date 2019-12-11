@@ -5,7 +5,6 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA
 
-
 # EE4017 Lab 4
 
 class Transaction:

@@ -22,11 +22,8 @@ app = Flask(__name__)
 myWallet = Wallet()
 blockchain = Blockchain(myWallet)
 
-"""
-TODO: Able to change difficulty when the hash power of the network change
-      Some APIs need to be edited to complete the above task
-"""
-
+# TODO: Able to change difficulty when the hash power of the network change
+#       Some APIs need to be edited to complete the above task
 
 # Flask uses the @app.route() decorator to define an API.
 # All API return messages in JSON file format and a number (HTTP status code) behind it.
@@ -109,9 +106,9 @@ def full_chain():
     }
     return jsonify(response), 200
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # New APIs beyond EE4017 Lab 6
+
 
 @app.route('/lightweight', methods=['GET'])
 def lightweight():
@@ -222,9 +219,9 @@ def mine():
     }
     return jsonify(response), 200
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # New APIs beyond EE4017 Lab 6
+
 
 @app.route('/merkle_path', methods=['POST'])
 def merkle_path():
