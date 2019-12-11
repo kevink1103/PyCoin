@@ -222,6 +222,10 @@ def shutdown():
 def not_found(error):
     return "Not found", 404
 
+@app.errorhandler(405)
+def method_not_allowed(error):
+    return "Method not allowed", 405
+
 if __name__ == "__main__":
     # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
     # dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))
