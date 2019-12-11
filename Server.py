@@ -107,6 +107,10 @@ def lightweight():
 @app.route('/check_balance', methods=['POST'])
 def check_balance():
     values = request.form
+    required = ['address']
+    # Check that the required fields are in the POST data
+    if not all(k in values for k in required):
+        return 'Missing values', 400
     address = values.get('address')
     balance = blockchain.check_balance(address)
     return jsonify(balance), 200
@@ -190,6 +194,10 @@ def mine():
 @app.route('/merkle_path', methods=['POST'])
 def merkle_path():
     values = request.form
+    required = ['sender', 'recipient', 'value']
+    # Check that the required fields are in the POST data
+    if not all(k in values for k in required):
+        return 'Missing values', 400
     transaction = Transaction(values.get('sender'), values.get('recipient'), values.get('value'))
     if values.get('signature'):
         transaction.signature = values.get('signature')
@@ -204,6 +212,10 @@ def merkle_path():
 @app.route('/partial_validation', methods=['POST'])
 def partial_validation():
     values = request.form
+    required = ['root', 'path', 'sender', 'recipient', 'value']
+    # Check that the required fields are in the POST data
+    if not all(k in values for k in required):
+        return 'Missing values', 400
     root = values.get('root')
     path = json.loads(values.get('path'))
     transaction = Transaction(values.get('sender'), values.get('recipient'), values.get('value'))
@@ -223,6 +235,9 @@ def shutdown():
     func()
     return "Shutting down...", 200
 
+@app.errorhandler(404)
+def not_found(error):
+    return "Not found", 404
 
 if __name__ == "__main__":
     # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
