@@ -15,11 +15,13 @@ app = Flask(__name__)
 myWallet = Wallet()
 blockchain = Blockchain(myWallet)
 
+
 @app.route('/status', methods=['GET'])
 def status():
     if myWallet and blockchain:
         return "alive", 200
     return "dead", 400
+
 
 @app.route('/register_node', methods=['POST'])
 def register_node():
@@ -58,11 +60,13 @@ def register_node():
         }
     return jsonify(response), 201
 
+
 @app.route('/get_nodes', methods=['GET'])
 def get_nodes():
     nodes = list(blockchain.nodes)
     response = {'nodes': nodes}
     return jsonify(response), 200
+
 
 @app.route('/chain', methods=['GET'])
 def part_chain():
@@ -72,6 +76,7 @@ def part_chain():
     }
     return jsonify(response), 200
 
+
 @app.route('/fullchain', methods=['GET'])
 def full_chain():
     response = {
@@ -79,6 +84,7 @@ def full_chain():
         'length': len(blockchain.chain),
     }
     return jsonify(response), 200
+
 
 @app.route('/lightweight', methods=['GET'])
 def lightweight():
@@ -94,6 +100,7 @@ def lightweight():
         'length': len(lightweight)
     }
     return jsonify(response), 200
+
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
@@ -112,12 +119,14 @@ def new_transaction():
         response = {'message': 'Invalid Transaction!'}
         return jsonify(response), 406
 
+
 @app.route('/get_transactions', methods=['GET'])
 def get_transactions():
     # Get transactions from transactions pool
     transactions = json.dumps(blockchain.unconfirmed_transactions)
     response = {'transactions': transactions}
     return jsonify(response), 200
+
 
 @app.route('/consensus', methods=['GET'])
 def consensus():
@@ -131,6 +140,7 @@ def consensus():
             'message': 'Our chain is authoritative'
         }
     return jsonify(response), 200
+
 
 @app.route('/mine', methods=['GET'])
 def mine():
@@ -148,6 +158,7 @@ def mine():
     }
     return jsonify(response), 200
 
+
 @app.route('/merkle_path', methods=['POST'])
 def merkle_path():
     values = request.form
@@ -160,6 +171,7 @@ def merkle_path():
         root = path[-1]
         path = path[:-1]
     return jsonify(path), 200
+
 
 @app.route('/partial_validation', methods=['POST'])
 def partial_validation():
@@ -174,6 +186,7 @@ def partial_validation():
     result = root == new_root
     return jsonify(result), 200
 
+
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -181,6 +194,7 @@ def shutdown():
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
     return "Shutting down...", 200
+
 
 if __name__ == "__main__":
     # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
