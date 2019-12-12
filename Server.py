@@ -40,7 +40,10 @@ def register_node():
     # Register node
     blockchain.register_node(node)
     # Retrieve nodes list
-    node_list = requests.get('http://' + node + '/get_nodes')
+    try:
+        node_list = requests.get('http://' + node + '/get_nodes')
+    except:
+        return "Error: the address is invalid", 400
     if node_list.status_code == 200:
         node_list = node_list.json()['nodes']
         for node in node_list:
@@ -96,6 +99,7 @@ def lightweight():
         block_object = Block(block['index'], block['transaction'], block['timestamp'], block['previous_hash'])
         block_object.merkle_root = block['merkle_root']
         block_object.nonce = block['nonce']
+        block_object.difficulty = block['difficulty']
         lightweight.append(block_object.to_dict())
     response = {
         'chain': json.dumps(lightweight),
@@ -178,7 +182,10 @@ def consensus():
 def mine():
     new_block = blockchain.mine(myWallet)
     for node in blockchain.nodes:
-        requests.get('http://' + node + '/consensus')
+        try:
+            requests.get('http://' + node + '/consensus')
+        except:
+            continue
     response = {
         'index': new_block.index,
         'transactions': new_block.transaction,
@@ -187,6 +194,7 @@ def mine():
         'hash': new_block.hash,
         'merkle_root': new_block.merkle_root,
         'nonce': new_block.nonce,
+        'difficulty': new_block.difficulty
     }
     return jsonify(response), 200
 
@@ -242,6 +250,10 @@ def not_found(error):
 @app.errorhandler(405)
 def method_not_allowed(error):
     return "Method not allowed", 405
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return "Internal server error", 500
 
 if __name__ == "__main__":
     # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)

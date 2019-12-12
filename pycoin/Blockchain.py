@@ -17,7 +17,6 @@ from pycoin import Block
 # difficulty should be defined in the Block class instead to complete the above task
 
 class Blockchain:
-    difficulty = 2
     nodes = set()
 
     def __init__(self, wallet: Wallet):
@@ -109,7 +108,7 @@ class Blockchain:
         computed_hash = block.compute_hash()
         # Keep trying and increasing the nonce value
         # until the new hash value meets the difficulty level restriction (Solve the hash puzzle)
-        while not computed_hash.startswith('0' * Blockchain.difficulty):
+        while not computed_hash.startswith('0' * block.difficulty):
             block.nonce += 1
             computed_hash = block.compute_hash()
         return computed_hash
@@ -120,7 +119,7 @@ class Blockchain:
         a valid proof should have a valid hash starting with the corresponding difficulty number of 0
         (e.g. difficulty = 2; hash = 00abcd...), and the testing block's hash should match with the computed hash.
         '''
-        return (block_hash.startswith('0' * Blockchain.difficulty) and (block_hash == block.compute_hash()))
+        return (block_hash.startswith('0' * block.difficulty) and (block_hash == block.compute_hash()))
 
     def add_block(self, block: Block, proof: str) -> bool:
         '''
@@ -153,6 +152,8 @@ class Blockchain:
             transaction=self.unconfirmed_transactions,
             timestamp=datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
             previous_hash=self.last_block['hash'])
+        # decide new difficulty
+        new_block.difficulty = 4
 
         proof = self.proof_of_work(new_block)
         if self.add_block(new_block, proof):
@@ -175,6 +176,7 @@ class Blockchain:
                 block['previous_hash'])
             current_block.merkle_root = block['merkle_root']
             current_block.nonce = block['nonce']
+            current_block.difficulty = block['difficulty']
 
             if current_index + 1 < len(chain):
                 if current_block.compute_hash() != json.loads(chain[current_index+1])['previous_hash']:
@@ -206,7 +208,10 @@ class Blockchain:
         max_length = len(self.chain)
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
-            response = requests.get('http://' + node + '/fullchain')
+            try:
+                response = requests.get('http://' + node + '/fullchain')
+            except:
+                continue
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']
