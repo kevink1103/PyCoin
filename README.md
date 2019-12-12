@@ -24,15 +24,15 @@ To develop a “Bitcoin” application using Python.
 
 ## Optional Features
 
-- [ ] Able to reject malformed blocks
-- [ ] Able to check the balance before confirming a transaction
-- [ ] Able to give interest to coins holder
-- [ ] Able to charge transaction fee from the sender of the transaction
-- [ ] Able to demonstrate partial validation using merkle tree
-- [ ] Developed a lightweight node that store block header (First criteria
+- [x] Able to reject malformed blocks
+- [x] Able to check the balance before confirming a transaction
+- [x] Able to give interest to coins holder
+- [x] Able to charge transaction fee from the sender of the transaction
+- [x] Able to demonstrate partial validation using merkle tree
+- [x] Developed a lightweight node that store block header (First criteria
 must be fulfilled)
-- [ ] Able to change difficulty when the hash power of the network change
-- [ ] Develop an App on any mobile platform to perform mobile payment using the cryptocurrency network
+- [x] Able to change difficulty when the hash power of the network change
+- [x] Develop an App on any mobile platform to perform mobile payment using the cryptocurrency network
 
 ## Requirements
 
