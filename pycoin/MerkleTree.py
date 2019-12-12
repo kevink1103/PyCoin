@@ -109,11 +109,11 @@ def main():
     # print(valid)
 
     # Transaction(sender, recipient, transferred value of coins)
-    transaction1 = Transaction("Kevin", "Chronos", "5.0")
-    transaction2 = Transaction("Chronos", "Erica", "2.0")
-    transaction3 = Transaction("Erica", "Kevin", "1.0")
-    transaction4 = Transaction("Claire", "Kevin", "1.2")
-    transaction5 = Transaction("Lora", "Chronos", "3.3")
+    transaction1 = Transaction("Kevin", "Chronos", "5.0", "0.5")
+    transaction2 = Transaction("Chronos", "Erica", "2.0", "0.2")
+    transaction3 = Transaction("Erica", "Kevin", "1.0", "0.1")
+    transaction4 = Transaction("Claire", "Kevin", "1.2", "0.1")
+    transaction5 = Transaction("Lora", "Chronos", "3.3, ""0.3")
     transactions = [transaction1.to_json(), transaction2.to_json(), transaction3.to_json(), transaction4.to_json(), transaction5.to_json()]
     prnt(transactions)
     hashes = MerkleTree.transactionHashes(transactions)
