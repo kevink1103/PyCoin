@@ -2,7 +2,7 @@ import datetime
 import json
 from urllib.parse import urlparse
 from hashlib import sha256
-from typing import List, Union, Any
+from typing import List, Union
 
 import requests
 from pyprnt import prnt
@@ -19,6 +19,8 @@ class Blockchain:
     # limit difficulty
     MIN_DIFFICULTY = 1
     MAX_DIFFICULTY = 6
+    # interest rate
+    INTEREST = 0.1
 
     def __init__(self, wallet: Wallet):
         '''
@@ -78,16 +80,14 @@ class Blockchain:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
                     balance -= float(transaction["value"])
-                    if "fee" in transaction.keys():
-                        balance -= float(transaction["fee"])
+                    balance -= float(transaction["fee"])
         for transaction in self.unconfirmed_transactions:
             transaction = json.loads(transaction)
             if transaction["recipient"] == address:
                 balance += float(transaction["value"])
             elif transaction["sender"] == address:
                 balance -= float(transaction["value"])
-                if "fee" in transaction.keys():
-                    balance -= float(transaction["fee"])
+                balance -= float(transaction["fee"])
         return balance
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ class Blockchain:
         '''
         if transaction.verify_transaction_signature():
             # Check balance and fee before confirming a transaction
-            total_charge = float(transaction.value) + transaction.fee
+            total_charge = float(transaction.value) + float(transaction.fee)
             if transaction.sender != "Block_Reward" and \
                     self.check_balance(transaction.sender) >= total_charge:
                 self.unconfirmed_transactions.append(transaction.to_json())
@@ -146,10 +146,16 @@ class Blockchain:
         It confirms all unconfirmed transactions into blocks by using the proof-of-work method.
         convert to JSON to store transaction in the blockchain
         '''
-        total_tx_fee = 0
+        # get all available wallet addresses in the network
+        addresses = self.get_addresses_from_transactions()
+        # create Transaction objects for interest
+        interest_txs = self.create_interest_transactions(addresses)
+        for interest_tx in interest_txs:
+            self.unconfirmed_transactions.insert(0, interest_tx.to_json())
+
         # add up all the transaction fee from all unconfirmed transactions
-        for transaction in self.unconfirmed_transactions:
-            total_tx_fee += json.loads(transaction)['fee']
+        tx_fees = [float(json.loads(transaction)['fee']) for transaction in self.unconfirmed_transactions]
+        total_tx_fee = sum(tx_fees)
         # create and add a transaction into the list of unconfirmed transactions
         # for sending out a block reward, which also include all of their transaction fees
         block_reward = Transaction("Block_Reward", wallet.pubkey, str(5.0 + total_tx_fee))
@@ -172,6 +178,29 @@ class Blockchain:
             return new_block
         else:
             return False
+
+    def get_addresses_from_transactions(self) -> List[str]:
+        '''get all addresses by looping through all blocks and transactions'''
+        addresses = set()
+        fullchain = [json.loads(block) for block in self.chain]
+        for block in fullchain:
+            for trans in block['transaction']:
+                trans = json.loads(trans)
+                if trans['sender'] != 'Block_Reward':
+                    addresses.add(trans['sender'])
+                if trans['recipient'] != 'Block_Reward':
+                    addresses.add(trans['recipient'])
+        return list(addresses)
+
+    def create_interest_transactions(self, addresses) -> List[Transaction]:
+        '''check balance of each address and generate interest transaction'''
+        interest_txs = []
+        for address in addresses:
+            balance = self.check_balance(address)
+            interest = balance * self.INTEREST
+            interest_tx = Transaction("Block_Reward", address, str(interest))
+            interest_txs.append(interest_tx)
+        return interest_txs
 
     # In a cryptocurrency network, we might receive a full copy of the chain from other nodes.
     def next_difficulty(self, last_block):
@@ -285,6 +314,7 @@ class Blockchain:
         '''return merkle path of given transaction'''
         path = []
         transactionHash = sha256(str(transaction.to_json()).encode()).hexdigest()
+
         block = self.search_block_with_transaction(transactionHash)
         leaves = []
         if block:
@@ -301,7 +331,7 @@ class Blockchain:
 
     def search_block_with_transaction(self, transactionHash):
         '''return block that matches given transaction hash'''
-        fullchain: List[Any] = [json.loads(block) for block in self.chain]
+        fullchain = [json.loads(block) for block in self.chain]
         for block in fullchain[::-1]:
             for trans in block['transaction']:
                 trans = json.loads(trans)

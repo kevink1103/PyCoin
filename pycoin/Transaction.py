@@ -47,11 +47,11 @@ class Transaction:
         else:
             return False
 
-    def calculate_transaction_fee(self) -> float:
+    def calculate_transaction_fee(self) -> str:
         '''
         method to calculate the transaction fee at a constant rate of 2%,
         referencing to credit card processing fee
         '''
         fee_rate = 0.02
-        fee = float(self.value) * fee_rate
-        return fee
+        fee = float(self.value) * float(fee_rate)
+        return str(fee)
