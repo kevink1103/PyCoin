@@ -76,40 +76,16 @@ class Blockchain:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
                     balance -= float(transaction["value"])
+                    if "fee" in transaction.keys():
+                        balance -= float(transaction["fee"])
         for transaction in self.unconfirmed_transactions:
             transaction = json.loads(transaction)
             if transaction["recipient"] == address:
                 balance += float(transaction["value"])
             elif transaction["sender"] == address:
                 balance -= float(transaction["value"])
-        return balance
-
-    def check_balance_and_fee(self, address: str) -> float:
-        '''
-        check balance INCLUDING transaction fee of a given wallet address
-        by looping through all blocks in blockchain and all unconfirmed transactions.
-        '''
-
-        if len(self.chain) <= 0:
-            return None
-
-        balance = 0.0
-
-        for block in self.chain:
-            block = json.loads(block)
-            transactions = block["transaction"]
-            for transaction in transactions:
-                transaction = json.loads(transaction)
-                if transaction["recipient"] == address:
-                    balance += float(transaction["value"])
-                elif transaction["sender"] == address:
-                    balance = balance - float(transaction["value"]) - float(transaction['fee'])
-        for transaction in self.unconfirmed_transactions:
-            transaction = json.loads(transaction)
-            if transaction["recipient"] == address:
-                balance += float(transaction["value"])
-            elif transaction["sender"] == address:
-                balance = balance - float(transaction["value"]) - float(transaction['fee'])
+                if "fee" in transaction.keys():
+                    balance -= float(transaction["fee"])
         return balance
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -121,9 +97,9 @@ class Blockchain:
         '''
         if transaction.verify_transaction_signature():
             # Check balance and fee before confirming a transaction
+            total_charge = float(transaction.value) + transaction.fee
             if transaction.sender != "Block_Reward" and \
-                    self.check_balance(transaction.sender) >= float(transaction.value) and \
-                    self.check_balance_and_fee(transaction.sender) >= float(transaction.value):
+                    self.check_balance(transaction.sender) >= total_charge:
                 self.unconfirmed_transactions.append(transaction.to_json())
                 return True
         return False
@@ -174,7 +150,7 @@ class Blockchain:
             total_tx_fee += json.loads(transaction)['fee']
         # create and add a transaction into the list of unconfirmed transactions
         # for sending out a block reward, which also include all of their transaction fees
-        block_reward = Transaction("Block_Reward", wallet.pubkey, ("5.0" + str(total_tx_fee)))
+        block_reward = Transaction("Block_Reward", wallet.pubkey, str(5.0 + total_tx_fee))
         self.unconfirmed_transactions.insert(0, block_reward.to_json())
 
         # if there are no unconfirmed transactions, return False
@@ -223,8 +199,7 @@ class Blockchain:
                     current_transaction = Transaction(
                         transaction['sender'],
                         transaction['recipient'],
-                        transaction['value'],
-                        transaction['fee'])
+                        transaction['value'])
                     current_transaction.signature = transaction['signature']
                     # Validate digital signature of each transaction
                     if not current_transaction.verify_transaction_signature():

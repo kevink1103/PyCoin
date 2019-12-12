@@ -13,9 +13,8 @@ class Transaction:
         self.sender = sender
         self.recipient = recipient
         self.value = value
-        self.calculate_transaction_fee()
+        self.fee = self.calculate_transaction_fee()
 
-    
     def to_dict(self) -> dict:
         '''method to dump all contents (except signature) in the transaction as a dictionary'''
         # Signature is not included here
@@ -48,10 +47,11 @@ class Transaction:
         else:
             return False
 
-    def calculate_transaction_fee(self) -> None:
+    def calculate_transaction_fee(self) -> float:
         '''
         method to calculate the transaction fee at a constant rate of 2%,
         referencing to credit card processing fee
         '''
         fee_rate = 0.02
-        self.fee = self.value * fee_rate
+        fee = float(self.value) * fee_rate
+        return fee
