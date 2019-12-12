@@ -49,5 +49,9 @@ class Transaction:
             return False
 
     def calculate_transaction_fee(self) -> None:
-        fee_percent = 0.1
-        self.fee = self.value * fee_percent
+        '''
+        method to calculate the transaction fee at a constant rate of 2%,
+        referencing to credit card processing fee
+        '''
+        fee_rate = 0.02
+        self.fee = self.value * fee_rate

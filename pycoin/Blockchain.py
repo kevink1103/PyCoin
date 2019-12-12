@@ -13,9 +13,6 @@ from pycoin import Block
 
 # EE4017 Lab 5
 
-# TODO: Able to change difficulty when the hash power of the network change
-#       difficulty should be defined in the Block class instead to complete the above task
-
 class Blockchain:
     difficulty = 2
     # store the IP addresses of other nodes in the cryptocurrency network
@@ -28,22 +25,21 @@ class Blockchain:
         '''
         self.unconfirmed_transactions: List[str] = []
         self.chain: List[str] = []
+        self.create_genesis_block(wallet)
 
     def create_genesis_block(self, wallet: Wallet):
         '''method to create and puts the genesis block into the blockchain'''
-        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0", "0.5").to_json()
+        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         # Hash of genesis block cannot be computed directly, proof of work is needed
         genesis_block.hash = self.proof_of_work(genesis_block)
         self.chain.append(genesis_block.to_json())
-        self.create_genesis_block(wallet)
 
     @property  # getter of the last block
     def last_block(self):
         '''get the very last block'''
         return json.loads(self.chain[-1])
 
-    # method to register the new node
     def register_node(self, node_url):
         '''register new node by parsing url'''
         # Checking node_url has valid format
@@ -118,7 +114,6 @@ class Blockchain:
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    # TODO: Able to charge transaction fee from the sender of the transaction
     def add_new_transaction(self, transaction: Transaction) -> bool:
         '''
         add a new transaction to the block
@@ -169,13 +164,20 @@ class Blockchain:
 
     def mine(self, wallet: Wallet) -> Union[Block, bool]:
         '''
-        a mining method to generate new blocks and claim the block reward
-        this method confirms all unconfirmed transactions into blocks by using the proof-of-work method.
-        convert to JSON to store transaction in the blockchain because JSON format
+        method to generate new blocks and claim the block reward and all the transaction fees
+        It confirms all unconfirmed transactions into blocks by using the proof-of-work method.
+        convert to JSON to store transaction in the blockchain
         '''
-        # TODO: Let the miner obtain all transaction fees included in every transactions the block will include
-        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0", "0.5")
+        total_tx_fee = 0
+        # add up all the transaction fee from all unconfirmed transactions
+        for transaction in self.unconfirmed_transactions:
+            total_tx_fee += json.loads(transaction)['fee']
+        # create and add a transaction into the list of unconfirmed transactions
+        # for sending out a block reward, which also include all of their transaction fees
+        block_reward = Transaction("Block_Reward", wallet.pubkey, ("5.0" + str(total_tx_fee)))
         self.unconfirmed_transactions.insert(0, block_reward.to_json())
+
+        # if there are no unconfirmed transactions, return False
         if not self.unconfirmed_transactions:
             return False
 
@@ -286,7 +288,7 @@ class Blockchain:
         if block:
             for trans in block['transaction']:
                 trans = json.loads(trans)
-                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'], trans['fee'])
+                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'])
                 if 'signature' in trans.keys():
                     new_trans.signature = trans['signature']
                 new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()
@@ -301,7 +303,7 @@ class Blockchain:
         for block in fullchain[::-1]:
             for trans in block['transaction']:
                 trans = json.loads(trans)
-                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'], trans['fee'])
+                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'])
                 if 'signature' in trans.keys():
                     new_trans.signature = trans['signature']
                 new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()

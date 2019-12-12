@@ -22,7 +22,6 @@ class Block:
         [we need to calculate hash value and nonce after adding the transactions.]
     """
 
-    # TODO: Able to change difficulty when the hash power of the network change
     def __init__(self, index: int, transaction: List[str], timestamp: str, previous_hash: str):
         '''constructor to create a block'''
         self.index: int = index
