@@ -36,6 +36,7 @@ class Blockchain:
         # Hash of genesis block cannot be computed directly, proof of work is needed
         genesis_block.hash = self.proof_of_work(genesis_block)
         self.chain.append(genesis_block.to_json())
+        self.create_genesis_block(wallet)
 
     @property  # getter of the last block
     def last_block(self):
