@@ -14,9 +14,11 @@ from pycoin import Block
 # EE4017 Lab 5
 
 class Blockchain:
-    difficulty = 2
     # store the IP addresses of other nodes in the cryptocurrency network
     nodes = set()
+    # limit difficulty
+    MIN_DIFFICULTY = 1
+    MAX_DIFFICULTY = 6
 
     def __init__(self, wallet: Wallet):
         '''
@@ -110,7 +112,7 @@ class Blockchain:
         computed_hash = block.compute_hash()
         # Keep trying and increasing the nonce value
         # until the new hash value meets the difficulty level restriction (Solve the hash puzzle)
-        while not computed_hash.startswith('0' * Blockchain.difficulty):
+        while not computed_hash.startswith('0' * block.difficulty):
             block.nonce += 1
             computed_hash = block.compute_hash()
         return computed_hash
@@ -121,7 +123,7 @@ class Blockchain:
         a valid proof should have a valid hash starting with the corresponding difficulty number of 0
         (e.g. difficulty = 2; hash = 00abcd...), and the testing block's hash should match with the computed hash.
         '''
-        return (block_hash.startswith('0' * Blockchain.difficulty) and (block_hash == block.compute_hash()))
+        return (block_hash.startswith('0' * block.difficulty) and (block_hash == block.compute_hash()))
 
     def add_block(self, block: Block, proof: str) -> bool:
         '''
@@ -162,6 +164,7 @@ class Blockchain:
             transaction=self.unconfirmed_transactions,
             timestamp=datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
             previous_hash=self.last_block['hash'])
+        new_block.difficulty = self.next_difficulty(self.last_block)
 
         proof = self.proof_of_work(new_block)
         if self.add_block(new_block, proof):
@@ -171,6 +174,26 @@ class Blockchain:
             return False
 
     # In a cryptocurrency network, we might receive a full copy of the chain from other nodes.
+    def next_difficulty(self, last_block):
+        '''
+        compare the 3rd last node and 1st last node timestamp
+        to determine current new block's difficulty
+        '''
+        difficulty = last_block['difficulty']
+
+        if len(self.chain) > 3:
+            recent_blocks = [json.loads(block) for block in self.chain[-3:]]
+            timestamps = list(map(lambda x: datetime.datetime.strptime(x["timestamp"], "%m/%d/%Y, %H:%M:%S"), recent_blocks))
+            difference = timestamps[2] - timestamps[0]
+            print(difference.seconds)
+            # Safe range is 10 <= seconds <= 60
+            if difference.total_seconds() < 10 and difficulty + 1 <= self.MAX_DIFFICULTY:
+                difficulty += 1
+            elif difference.total_seconds() > 60 and difficulty - 1 >= self.MIN_DIFFICULTY:
+                difficulty -= 1
+        return difficulty
+
+    # In a cryptocurrency network, we might receive a full of copy of the chain from other nodes.
     # We should validate this chain before replacing it with ours.
     def valid_chain(self, chain: List[str]) -> bool:
         '''check if a blockchain (all blocks) is valid'''
@@ -186,6 +209,7 @@ class Blockchain:
                 block['previous_hash'])
             current_block.merkle_root = block['merkle_root']
             current_block.nonce = block['nonce']
+            current_block.difficulty = block['difficulty']
 
             if current_index + 1 < len(chain):
                 if current_block.compute_hash() != json.loads(chain[current_index+1])['previous_hash']:
@@ -229,7 +253,10 @@ class Blockchain:
         max_length = len(self.chain)
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
-            response = requests.get('http://' + node + '/fullchain')
+            try:
+                response = requests.get('http://' + node + '/fullchain')
+            except:
+                continue
             if response.status_code == 200:
                 length = response.json()['length']
                 chain = response.json()['chain']

@@ -31,7 +31,7 @@ class Block:
         self.hash: str = "0"
         self.merkle_root: str = ""
         self.nonce: int = 0
-        # self.difficulty = 2   # initial difficulty
+        self.difficulty = 1
 
     def to_dict(self) -> dict:
         '''method to dump only block header to compute hash'''
@@ -40,8 +40,8 @@ class Block:
             'timestamp': self.timestamp,
             'previous_hash': self.previous_hash,
             'merkle_root': self.merkle_root,
-            'nonce': self.nonce
-            # 'difficulty': self.difficulty
+            'nonce': self.nonce,
+            'difficulty': self.difficulty
         }
 
     def to_json(self) -> str:
