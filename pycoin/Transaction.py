@@ -8,11 +8,12 @@ from Crypto.Hash import SHA
 # EE4017 Lab 4
 
 class Transaction:
-    def __init__(self, sender, recipient, value):
+    def __init__(self, sender, recipient, value, fee):
         '''constructor to define the sender, recipient and value in a transactiom'''
         self.sender = sender
         self.recipient = recipient
         self.value = value
+        self.fee = fee
 
     
     def to_dict(self) -> dict:
@@ -21,7 +22,8 @@ class Transaction:
         return {
             'sender': self.sender,
             'recipient': self.recipient,
-            'value': self.value
+            'value': self.value,
+            'fee': self.fee
         }
 
     def to_json(self) -> str:

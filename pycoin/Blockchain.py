@@ -2,7 +2,7 @@ import datetime
 import json
 from urllib.parse import urlparse
 from hashlib import sha256
-from typing import List, Union
+from typing import List, Union, Any
 
 import requests
 from pyprnt import prnt
@@ -31,7 +31,7 @@ class Blockchain:
 
     def create_genesis_block(self, wallet: Wallet):
         '''method to create and puts the genesis block into the blockchain'''
-        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0").to_json()
+        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0", "0.5").to_json()
         genesis_block = Block(0, [block_reward], datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), "0")
         # Hash of genesis block cannot be computed directly, proof of work is needed
         genesis_block.hash = self.proof_of_work(genesis_block)
@@ -80,13 +80,13 @@ class Blockchain:
                 if transaction["recipient"] == address:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
-                    balance -= float(transaction["value"])
+                    balance = balance - float(transaction["value"]) - float(transaction["fee"])
         for transaction in self.unconfirmed_transactions:
             transaction = json.loads(transaction)
             if transaction["recipient"] == address:
                     balance += float(transaction["value"])
             elif transaction["sender"] == address:
-                balance -= float(transaction["value"])
+                balance = balance - float(transaction["value"]) - float(transaction["fee"])
         return balance
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -144,7 +144,8 @@ class Blockchain:
         this method confirms all unconfirmed transactions into blocks by using the proof-of-work method.
         convert to JSON to store transaction in the blockchain because JSON format
         '''
-        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0")
+        # TODO: Let the miner obtain all transaction fees included in every transactions the block will include
+        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0", "0.5")
         self.unconfirmed_transactions.insert(0, block_reward.to_json())
         if not self.unconfirmed_transactions:
             return False
@@ -191,7 +192,8 @@ class Blockchain:
                     current_transaction = Transaction(
                         transaction['sender'],
                         transaction['recipient'],
-                        transaction['value'])
+                        transaction['value'],
+                        transaction['fee'])
                     current_transaction.signature = transaction['signature']
                     # Validate digital signature of each transaction
                     if not current_transaction.verify_transaction_signature():
@@ -255,7 +257,7 @@ class Blockchain:
         if block:
             for trans in block['transaction']:
                 trans = json.loads(trans)
-                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'])
+                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'], trans['fee'])
                 if 'signature' in trans.keys():
                     new_trans.signature = trans['signature']
                 new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()
@@ -266,11 +268,11 @@ class Blockchain:
 
     def search_block_with_transaction(self, transactionHash):
         '''return block that matches given transaction hash'''
-        fullchain = [json.loads(block) for block in self.chain]
+        fullchain: List[Any] = [json.loads(block) for block in self.chain]
         for block in fullchain[::-1]:
             for trans in block['transaction']:
                 trans = json.loads(trans)
-                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'])
+                new_trans = Transaction(trans['sender'], trans['recipient'], trans['value'], trans['fee'])
                 if 'signature' in trans.keys():
                     new_trans.signature = trans['signature']
                 new_transHash = sha256(str(new_trans.to_json()).encode()).hexdigest()
