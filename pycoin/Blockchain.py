@@ -19,6 +19,8 @@ class Blockchain:
     # limit difficulty
     MIN_DIFFICULTY = 1
     MAX_DIFFICULTY = 6
+    # interest rate
+    INTEREST = 0.1
 
     def __init__(self, wallet: Wallet):
         '''
@@ -144,6 +146,13 @@ class Blockchain:
         It confirms all unconfirmed transactions into blocks by using the proof-of-work method.
         convert to JSON to store transaction in the blockchain
         '''
+        # get all available wallet addresses in the network
+        addresses = self.get_addresses_from_transactions()
+        # create Transaction objects for interest
+        interest_txs = self.create_interest_transactions(addresses)
+        for interest_tx in interest_txs:
+            self.unconfirmed_transactions.insert(0, interest_tx.to_json())
+
         # add up all the transaction fee from all unconfirmed transactions
         tx_fees = [float(json.loads(transaction)['fee']) for transaction in self.unconfirmed_transactions]
         total_tx_fee = sum(tx_fees)
@@ -169,6 +178,29 @@ class Blockchain:
             return new_block
         else:
             return False
+
+    def get_addresses_from_transactions(self) -> List[str]:
+        '''get all addresses by looping through all blocks and transactions'''
+        addresses = set()
+        fullchain = [json.loads(block) for block in self.chain]
+        for block in fullchain:
+            for trans in block['transaction']:
+                trans = json.loads(trans)
+                if trans['sender'] != 'Block_Reward':
+                    addresses.add(trans['sender'])
+                if trans['recipient'] != 'Block_Reward':
+                    addresses.add(trans['recipient'])
+        return list(addresses)
+
+    def create_interest_transactions(self, addresses) -> List[Transaction]:
+        '''check balance of each address and generate interest transaction'''
+        interest_txs = []
+        for address in addresses:
+            balance = self.check_balance(address)
+            interest = balance * self.INTEREST
+            interest_tx = Transaction("Block_Reward", address, str(interest))
+            interest_txs.append(interest_tx)
+        return interest_txs
 
     # In a cryptocurrency network, we might receive a full copy of the chain from other nodes.
     def next_difficulty(self, last_block):
