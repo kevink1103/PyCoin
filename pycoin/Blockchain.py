@@ -62,10 +62,9 @@ class Blockchain:
 
     def check_balance(self, address: str) -> float:
         '''
-        check balance of given wallet address
-        by looping through all blocks in blockchain and
-        all unconfirmed transactions.
-        this algorithm is used in etherium
+        check balance WITHOUT considering transaction fee of a given wallet address
+        by looping through all blocks in blockchain and all unconfirmed transactions.
+        => this algorithm is used in etherium
         '''
         if len(self.chain) <= 0:
             return None
@@ -89,6 +88,34 @@ class Blockchain:
                 balance -= float(transaction["value"])
         return balance
 
+    def check_balance_and_fee(self, address: str) -> float:
+        '''
+        check balance INCLUDING transaction fee of a given wallet address
+        by looping through all blocks in blockchain and all unconfirmed transactions.
+        '''
+
+        if len(self.chain) <= 0:
+            return None
+
+        balance = 0.0
+
+        for block in self.chain:
+            block = json.loads(block)
+            transactions = block["transaction"]
+            for transaction in transactions:
+                transaction = json.loads(transaction)
+                if transaction["recipient"] == address:
+                    balance += float(transaction["value"])
+                elif transaction["sender"] == address:
+                    balance = balance - float(transaction["value"]) - float(transaction['fee'])
+        for transaction in self.unconfirmed_transactions:
+            transaction = json.loads(transaction)
+            if transaction["recipient"] == address:
+                balance += float(transaction["value"])
+            elif transaction["sender"] == address:
+                balance = balance - float(transaction["value"]) - float(transaction['fee'])
+        return balance
+
     # ------------------------------------------------------------------------------------------------------------------
 
     # TODO: Able to charge transaction fee from the sender of the transaction
@@ -98,8 +125,10 @@ class Blockchain:
         after checking balance
         '''
         if transaction.verify_transaction_signature():
-            # Check balance before confirming a transaction
-            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= float(transaction.value):
+            # Check balance and fee before confirming a transaction
+            if transaction.sender != "Block_Reward" and \
+                    self.check_balance(transaction.sender) >= float(transaction.value) and \
+                    self.check_balance_and_fee(transaction.sender) >= float(transaction.value):
                 self.unconfirmed_transactions.append(transaction.to_json())
                 return True
         return False
@@ -163,7 +192,7 @@ class Blockchain:
         else:
             return False
 
-    # In a cryptocurrency network, we might receive a full of copy of the chain from other nodes.
+    # In a cryptocurrency network, we might receive a full copy of the chain from other nodes.
     # We should validate this chain before replacing it with ours.
     def valid_chain(self, chain: List[str]) -> bool:
         '''check if a blockchain (all blocks) is valid'''

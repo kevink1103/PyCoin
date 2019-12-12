@@ -170,7 +170,7 @@ def new_transaction_signed():
     # Check that the required fields are in the POST data
     if not all(k in values for k in required):
         return 'Missing values', 400
-    transaction = Transaction(values['sender'], values['recipient_address'], values['value'])
+    transaction = Transaction(values['sender'], values['recipient_address'], values['value'], values['fee'])
     transaction.signature = values['signature']
     transaction_result = blockchain.add_new_transaction(transaction)
     if transaction_result:

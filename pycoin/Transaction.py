@@ -8,12 +8,12 @@ from Crypto.Hash import SHA
 # EE4017 Lab 4
 
 class Transaction:
-    def __init__(self, sender, recipient, value, fee):
+    def __init__(self, sender, recipient, value):
         '''constructor to define the sender, recipient and value in a transactiom'''
         self.sender = sender
         self.recipient = recipient
         self.value = value
-        self.fee = fee
+        self.calculate_transaction_fee()
 
     
     def to_dict(self) -> dict:
@@ -47,3 +47,7 @@ class Transaction:
                 return False
         else:
             return False
+
+    def calculate_transaction_fee(self) -> None:
+        fee_percent = 0.1
+        self.fee = self.value * fee_percent
