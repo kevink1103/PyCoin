@@ -19,6 +19,9 @@ from pycoin import Block
 class Blockchain:
     # store the IP addresses of other nodes in the cryptocurrency network
     nodes = set()
+    # limit difficulty
+    MIN_DIFFICULTY = 1
+    MAX_DIFFICULTY = 6
 
     def __init__(self, wallet: Wallet):
         '''
@@ -153,8 +156,7 @@ class Blockchain:
             transaction=self.unconfirmed_transactions,
             timestamp=datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
             previous_hash=self.last_block['hash'])
-        # decide new difficulty
-        new_block.difficulty = 4
+        new_block.difficulty = self.next_difficulty(self.last_block)
 
         proof = self.proof_of_work(new_block)
         if self.add_block(new_block, proof):
@@ -162,6 +164,25 @@ class Blockchain:
             return new_block
         else:
             return False
+
+    def next_difficulty(self, last_block):
+        '''
+        compare the 3rd last node and 1st last node timestamp
+        to determine current new block's difficulty
+        '''
+        difficulty = last_block['difficulty']
+
+        if len(self.chain) > 3:
+            recent_blocks = [json.loads(block) for block in self.chain[-3:]]
+            timestamps = list(map(lambda x: datetime.datetime.strptime(x["timestamp"], "%m/%d/%Y, %H:%M:%S"), recent_blocks))
+            difference = timestamps[2] - timestamps[0]
+            print(difference.seconds)
+            # Safe range is 10 <= seconds <= 60
+            if difference.total_seconds() < 10 and difficulty + 1 <= self.MAX_DIFFICULTY:
+                difficulty += 1
+            elif difference.total_seconds() > 60 and difficulty - 1 >= self.MIN_DIFFICULTY:
+                difficulty -= 1
+        return difficulty
 
     # In a cryptocurrency network, we might receive a full of copy of the chain from other nodes.
     # We should validate this chain before replacing it with ours.

@@ -64,9 +64,11 @@ def register_node():
         node_list = node_list.json()['nodes']
         for node in node_list:
             blockchain.register_node(node)
-    for new_nodes in blockchain.nodes:
+
+    for new_node in blockchain.nodes:
         # Sending type B request
-        requests.post('http://' + new_nodes + '/register_node', data={'com_port': str(port)})
+        requests.post('http://' + new_node + '/register_node', data={'com_port': str(port)})
+        requests.get('http://' + new_node + '/consensus')
     # Check if our chain is authoritative from other nodes
     replaced = blockchain.consensus()
     if replaced:

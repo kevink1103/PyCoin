@@ -32,7 +32,7 @@ class Block:
         self.hash: str = "0"
         self.merkle_root: str = ""
         self.nonce: int = 0
-        self.difficulty = 3
+        self.difficulty = 1
 
     def to_dict(self) -> dict:
         '''method to dump only block header to compute hash'''
