@@ -80,13 +80,13 @@ class Blockchain:
                 if transaction["recipient"] == address:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
-                    balance = balance - float(transaction["value"]) - float(transaction["fee"])
+                    balance -= float(transaction["value"])
         for transaction in self.unconfirmed_transactions:
             transaction = json.loads(transaction)
             if transaction["recipient"] == address:
-                    balance += float(transaction["value"])
+                balance += float(transaction["value"])
             elif transaction["sender"] == address:
-                balance = balance - float(transaction["value"]) - float(transaction["fee"])
+                balance -= float(transaction["value"])
         return balance
 
     # ------------------------------------------------------------------------------------------------------------------
