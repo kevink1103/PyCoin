@@ -27,6 +27,7 @@ class Blockchain:
         '''
         self.unconfirmed_transactions: List[str] = []
         self.chain: List[str] = []
+        self.create_genesis_block(wallet)
 
     def create_genesis_block(self, wallet: Wallet):
         '''method to create and puts the genesis block into the blockchain'''
