@@ -11,12 +11,23 @@ from pycoin import Transaction
 from pycoin import Block
 from pycoin import Blockchain
 
+# EE4017 Lab 6
+
+# Initializing Flask framework and the client
+# Flask is a lightweight web application framework for Python
+# use it to build APIs to interact with the blockchain client through http requests.
 app = Flask(__name__)
+
+# Initialize the wallet, the blockchain
 myWallet = Wallet()
 blockchain = Blockchain(myWallet)
 
 # TODO: Able to change difficulty when the hash power of the network change
-# Some APIs need to be edited to complete the above task
+#       Some APIs need to be edited to complete the above task
+
+# Flask uses the @app.route() decorator to define an API.
+# All API return messages in JSON file format and a number (HTTP status code) behind it.
+# All Flask API must be placed outside of all classes and the main method.
 
 @app.route('/status', methods=['GET'])
 def status():
@@ -27,6 +38,11 @@ def status():
 
 @app.route('/register_node', methods=['POST'])
 def register_node():
+    '''
+    This API
+    a) registers new node with provided IP address
+    b) retrieves IP list from provided IP address using source IP address of this request and the provided com_port
+    '''
     values = request.form
     node = values.get('node')
     com_port = values.get('com_port')
@@ -65,6 +81,7 @@ def register_node():
 
 @app.route('/get_nodes', methods=['GET'])
 def get_nodes():
+    '''This API accesses IP addresses stored in class Blockchain for other nodes'''
     nodes = list(blockchain.nodes)
     response = {'nodes': nodes}
     return jsonify(response), 200
@@ -72,6 +89,11 @@ def get_nodes():
 
 @app.route('/chain', methods=['GET'])
 def part_chain():
+    '''
+    This API returns the last 10 blocks only
+    Because transferring the whole chain is time consuming especially when the size of chain is long
+    Sometimes, we just need the last few blocks to confirm our transactions.
+    '''
     response = {
         'chain': json.dumps(blockchain.chain[-10:]),
         'length': len(blockchain.chain),
@@ -81,11 +103,15 @@ def part_chain():
 
 @app.route('/fullchain', methods=['GET'])
 def full_chain():
+    '''This API returns the whole blockchain'''
     response = {
         'chain': json.dumps(blockchain.chain),
         'length': len(blockchain.chain),
     }
     return jsonify(response), 200
+
+# ----------------------------------------------------------------------------------------------------------------------
+# New APIs beyond EE4017 Lab 6
 
 
 @app.route('/lightweight', methods=['GET'])
@@ -115,9 +141,12 @@ def check_balance():
     balance = blockchain.check_balance(address)
     return jsonify(balance), 200
 
+# ----------------------------------------------------------------------------------------------------------------------
+
 
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
+    '''This API adds transactions to the transaction pool'''
     values = request.form
     required = ['recipient_address', 'value']
     # Check that the required fields are in the POST data
@@ -154,6 +183,7 @@ def new_transaction_signed():
 
 @app.route('/get_transactions', methods=['GET'])
 def get_transactions():
+    '''This API gets the transaction pool'''
     # Get transactions from transactions pool
     transactions = json.dumps(blockchain.unconfirmed_transactions)
     response = {'transactions': transactions}
@@ -162,6 +192,10 @@ def get_transactions():
 
 @app.route('/consensus', methods=['GET'])
 def consensus():
+    '''
+    A consensus API is needed for other nodes to notify us
+    that a new block is formed and should have initialized a synchronization process.
+    '''
     replaced = blockchain.consensus()
     if replaced:
         response = {
@@ -176,6 +210,7 @@ def consensus():
 
 @app.route('/mine', methods=['GET'])
 def mine():
+    '''A mining API'''
     new_block = blockchain.mine(myWallet)
     for node in blockchain.nodes:
         requests.get('http://' + node + '/consensus')
@@ -189,6 +224,9 @@ def mine():
         'nonce': new_block.nonce,
     }
     return jsonify(response), 200
+
+# ----------------------------------------------------------------------------------------------------------------------
+# New APIs beyond EE4017 Lab 6
 
 
 @app.route('/merkle_path', methods=['POST'])
@@ -235,14 +273,20 @@ def shutdown():
     func()
     return "Shutting down...", 200
 
+
 @app.errorhandler(404)
 def not_found(error):
     return "Not found", 404
+
 
 @app.errorhandler(405)
 def method_not_allowed(error):
     return "Method not allowed", 405
 
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+# Main method: run the Flask object.
 if __name__ == "__main__":
     # dummy_trans = Transaction(myWallet.pubkey, "professor", 4.0)
     # dummy_trans.add_signature(myWallet.sign_transaction(dummy_trans))

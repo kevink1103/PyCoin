@@ -5,7 +5,10 @@ from typing import List
 
 from pyprnt import prnt
 
-from Transaction import Transaction
+from pycoin import Transaction
+
+# EE4017 Lab 7
+# Implement partial validation by requesting Merkle Path from light node to full node
 
 # These txHashes should already be hashed
 txHashes = [
@@ -14,6 +17,7 @@ txHashes = [
     "46685c94b82b84fa05b6a0f36de6ff46475520113d5cb8c6fb060e043a0dbc5c",
     "ba7ed2544c78ad793ef5bb0ebe0b1c62e8eb9404691165ffcb08662d1733d7a8",
 ]
+
 
 class MerkleTree:
     def __init__(self):

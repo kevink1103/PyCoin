@@ -8,23 +8,23 @@ from pycoin import Transaction
 
 # EE4017 Lab 5
 
-# TODO: Able to change difficulty when the hash power of the network change
-# constructor to create a block
-
 class Block:
     """
-    Block consists of 6 parameters including
-    1. Index,
-    2. Transactions,
-    3. Timestamp
-    4. Hash value of the last block
-    5. Hash value of this block
-    6. Root of a Merkle tree containing transaction data
-    7. Nonce value
-    8. Difficulty Level (For changing difficulty when the hash power of the network change)
-    [we need to calculate hash value and nonce after adding the transactions.]
+    a block consists of 8 parameters including
+     1. Index,
+     2. Transactions,
+     3. Timestamp
+     4. Hash value of the last block
+     5. Hash value of this block
+     6. Root of a Merkle tree containing transaction data
+     7. Nonce value
+     8. Difficulty Level (For changing difficulty when the hash power of the network change)
+        [we need to calculate hash value and nonce after adding the transactions.]
     """
+
+    # TODO: Able to change difficulty when the hash power of the network change
     def __init__(self, index: int, transaction: List[str], timestamp: str, previous_hash: str):
+        '''constructor to create a block'''
         self.index: int = index
         self.transaction: List[str] = transaction
         self.timestamp: str = timestamp
@@ -57,12 +57,13 @@ class Block:
         '''
         self.merkle_root = self.compute_merkle_root()
         # Hash with index, timestamp, previous_hash, merkle_root, nonce
-        # Hash without transacitons
+        # Hash without transactions
         payload = str(self.to_dict()).encode()
         return sha256(payload).hexdigest()
 
     # ------------------------------------------------------------------------------------------------------------------
     # New methods beyond EE4017 labs
+    # Implement partial validation by requesting Merkle Path from light node to full node
 
     def compute_merkle_root(self) -> str:
         '''method to return merkle root of all transaction in this block'''
