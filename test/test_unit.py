@@ -55,7 +55,7 @@ class TestTransaction(unittest.TestCase):
         content = transaction.to_dict()
 
         self.assertIsInstance(content, dict)
-        self.assertEqual(list(content.keys()), ["sender", "recipient", "value"])
+        self.assertEqual(list(content.keys()), ["sender", "recipient", "value", "fee"])
     
     def test_transaction_to_json(self):
         wallet = Wallet()

@@ -22,9 +22,6 @@ app = Flask(__name__)
 myWallet = Wallet()
 blockchain = Blockchain(myWallet)
 
-# TODO: Able to change difficulty when the hash power of the network change
-#       Some APIs need to be edited to complete the above task
-
 # Flask uses the @app.route() decorator to define an API.
 # All API return messages in JSON file format and a number (HTTP status code) behind it.
 # All Flask API must be placed outside of all classes and the main method.

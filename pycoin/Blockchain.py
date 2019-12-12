@@ -2,7 +2,7 @@ import datetime
 import json
 from urllib.parse import urlparse
 from hashlib import sha256
-from typing import List, Union
+from typing import List, Union, Any
 
 import requests
 from pyprnt import prnt
@@ -12,9 +12,6 @@ from pycoin import Transaction
 from pycoin import Block
 
 # EE4017 Lab 5
-
-# TODO: Able to change difficulty when the hash power of the network change
-#       difficulty should be defined in the Block class instead to complete the above task
 
 class Blockchain:
     # store the IP addresses of other nodes in the cryptocurrency network
@@ -45,7 +42,6 @@ class Blockchain:
         '''get the very last block'''
         return json.loads(self.chain[-1])
 
-    # method to register the new node
     def register_node(self, node_url):
         '''register new node by parsing url'''
         # Checking node_url has valid format
@@ -64,10 +60,9 @@ class Blockchain:
 
     def check_balance(self, address: str) -> float:
         '''
-        check balance of given wallet address
-        by looping through all blocks in blockchain and
-        all unconfirmed transactions.
-        this algorithm is used in etherium
+        check balance WITHOUT considering transaction fee of a given wallet address
+        by looping through all blocks in blockchain and all unconfirmed transactions.
+        => this algorithm is used in etherium
         '''
         if len(self.chain) <= 0:
             return None
@@ -83,25 +78,30 @@ class Blockchain:
                     balance += float(transaction["value"])
                 elif transaction["sender"] == address:
                     balance -= float(transaction["value"])
+                    if "fee" in transaction.keys():
+                        balance -= float(transaction["fee"])
         for transaction in self.unconfirmed_transactions:
             transaction = json.loads(transaction)
             if transaction["recipient"] == address:
-                    balance += float(transaction["value"])
+                balance += float(transaction["value"])
             elif transaction["sender"] == address:
                 balance -= float(transaction["value"])
+                if "fee" in transaction.keys():
+                    balance -= float(transaction["fee"])
         return balance
 
     # ------------------------------------------------------------------------------------------------------------------
 
-    # TODO: Able to charge transaction fee from the sender of the transaction
     def add_new_transaction(self, transaction: Transaction) -> bool:
         '''
         add a new transaction to the block
         after checking balance
         '''
         if transaction.verify_transaction_signature():
-            # Check balance before confirming a transaction
-            if transaction.sender != "Block_Reward" and self.check_balance(transaction.sender) >= float(transaction.value):
+            # Check balance and fee before confirming a transaction
+            total_charge = float(transaction.value) + transaction.fee
+            if transaction.sender != "Block_Reward" and \
+                    self.check_balance(transaction.sender) >= total_charge:
                 self.unconfirmed_transactions.append(transaction.to_json())
                 return True
         return False
@@ -142,12 +142,20 @@ class Blockchain:
 
     def mine(self, wallet: Wallet) -> Union[Block, bool]:
         '''
-        a mining method to generate new blocks and claim the block reward
-        this method confirms all unconfirmed transactions into blocks by using the proof-of-work method.
-        convert to JSON to store transaction in the blockchain because JSON format
+        method to generate new blocks and claim the block reward and all the transaction fees
+        It confirms all unconfirmed transactions into blocks by using the proof-of-work method.
+        convert to JSON to store transaction in the blockchain
         '''
-        block_reward = Transaction("Block_Reward", wallet.pubkey, "5.0")
+        total_tx_fee = 0
+        # add up all the transaction fee from all unconfirmed transactions
+        for transaction in self.unconfirmed_transactions:
+            total_tx_fee += json.loads(transaction)['fee']
+        # create and add a transaction into the list of unconfirmed transactions
+        # for sending out a block reward, which also include all of their transaction fees
+        block_reward = Transaction("Block_Reward", wallet.pubkey, str(5.0 + total_tx_fee))
         self.unconfirmed_transactions.insert(0, block_reward.to_json())
+
+        # if there are no unconfirmed transactions, return False
         if not self.unconfirmed_transactions:
             return False
 
@@ -165,6 +173,7 @@ class Blockchain:
         else:
             return False
 
+    # In a cryptocurrency network, we might receive a full copy of the chain from other nodes.
     def next_difficulty(self, last_block):
         '''
         compare the 3rd last node and 1st last node timestamp
@@ -292,7 +301,7 @@ class Blockchain:
 
     def search_block_with_transaction(self, transactionHash):
         '''return block that matches given transaction hash'''
-        fullchain = [json.loads(block) for block in self.chain]
+        fullchain: List[Any] = [json.loads(block) for block in self.chain]
         for block in fullchain[::-1]:
             for trans in block['transaction']:
                 trans = json.loads(trans)
