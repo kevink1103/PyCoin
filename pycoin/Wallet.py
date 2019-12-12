@@ -34,7 +34,7 @@ class Wallet:
         h = SHA.new(payload)
         return binascii.hexlify(signer.sign(h)).decode('ascii')
 
-    
+
     @property  # getter function for public key (identity)
     def pubkey(self) -> str:
         '''method to export the public key in DER formation and decodes it as ascii'''
