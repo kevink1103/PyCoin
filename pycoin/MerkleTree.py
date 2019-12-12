@@ -5,7 +5,7 @@ from typing import List
 
 from pyprnt import prnt
 
-from Transaction import Transaction
+from pycoin import Transaction
 
 # EE4017 Lab 7
 # Implement partial validation by requesting Merkle Path from light node to full node
