@@ -64,7 +64,7 @@ class Blockchain:
         '''
         check balance of a given wallet address
         by looping through all blocks in blockchain and all unconfirmed transactions.
-        => this algorithm is used in Etherium
+        => this algorithm is used in Ethereum
         '''
         if len(self.chain) <= 0:
             return None
@@ -107,7 +107,7 @@ class Blockchain:
     # ------------------------------------------------------------------------------------------------------------------
 
     def proof_of_work(self, block: Block) -> str:
-        '''Proof-of-Work to find out the correct nonce'''
+        '''Proof-of-Work to verify a valid block and find the corresponding nonce value'''
         block.nonce = 0
         computed_hash = block.compute_hash()
         # Keep trying and increasing the nonce value
