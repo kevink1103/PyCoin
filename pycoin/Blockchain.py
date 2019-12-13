@@ -233,6 +233,7 @@ class Blockchain:
         current_index = 0
         chain = json.loads(chain)
 
+        # load and check every block from the blockchain
         while current_index < len(chain):
             block = json.loads(chain[current_index])
             current_block = Block(
@@ -244,9 +245,12 @@ class Blockchain:
             current_block.nonce = block['nonce']
             current_block.difficulty = block['difficulty']
 
+            # if the current block is NOT the last block
             if current_index + 1 < len(chain):
+                # if the hash value of the current block != previous block's hash value of the next block, then reject
                 if current_block.compute_hash() != json.loads(chain[current_index+1])['previous_hash']:
                     return False
+            # check if the current block is an instance from the list of chain
             if isinstance(current_block.transaction, list):
                 for transaction in current_block.transaction:
                     transaction = json.loads(transaction)
@@ -258,9 +262,10 @@ class Blockchain:
                         transaction['recipient'],
                         transaction['value'])
                     current_transaction.signature = transaction['signature']
-                    # Validate digital signature of each transaction
+                    # check if digital signature of each transaction is valid, if not then reject
                     if not current_transaction.verify_transaction_signature():
                         return False
+                # check if hash value of the current block is not valid, if yes then reject
                 if not self.is_valid_proof(current_block, block['hash']):
                     return False
             current_index += 1
