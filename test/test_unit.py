@@ -34,7 +34,7 @@ class TestWallet(unittest.TestCase):
         self.assertIsInstance(pubkey, str)
         self.assertGreater(len(pubkey), 0)
     
-    def test_wallet_pubkey(self):
+    def test_wallet_secretkey(self):
         wallet = Wallet()
         secret = wallet.secret
 
