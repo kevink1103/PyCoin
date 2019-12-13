@@ -62,7 +62,6 @@ class Block:
 
     # ------------------------------------------------------------------------------------------------------------------
     # New methods beyond EE4017 labs
-    # Implement partial validation by requesting Merkle Path from light node to full node
 
     def compute_merkle_root(self) -> str:
         '''method to return merkle root of all transaction in this block'''

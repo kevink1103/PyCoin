@@ -114,7 +114,7 @@ def full_chain():
 
 # ----------------------------------------------------------------------------------------------------------------------
 # New APIs beyond EE4017 Lab 6
-
+# Develop a lightweight node that store block header
 
 @app.route('/lightweight', methods=['GET'])
 def lightweight():

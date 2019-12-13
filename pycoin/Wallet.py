@@ -26,7 +26,7 @@ class Wallet:
 
     def sign_transaction(self, transaction: Transaction) -> str:
         '''
-        method to prove that the signature is coming from the actual owner in a transaction
+        method to return the signature that is coming from the actual owner in a transaction
         implemented in the Wallet class instead of Transaction class to protect the private key from illegal access
         '''
         signer = PKCS1_v1_5.new(self._private_key)

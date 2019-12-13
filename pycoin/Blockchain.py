@@ -58,13 +58,13 @@ class Blockchain:
             raise ValueError('Invalid URL')
 
     # ------------------------------------------------------------------------------------------------------------------
-    # New method beyond EE4017 labs
+    # New or modified methods beyond EE4017 labs
 
     def check_balance(self, address: str) -> float:
         '''
-        check balance WITHOUT considering transaction fee of a given wallet address
+        check balance of a given wallet address
         by looping through all blocks in blockchain and all unconfirmed transactions.
-        => this algorithm is used in etherium
+        => this algorithm is used in Etherium
         '''
         if len(self.chain) <= 0:
             return None
@@ -90,8 +90,6 @@ class Blockchain:
                 balance -= float(transaction["fee"])
         return balance
 
-    # ------------------------------------------------------------------------------------------------------------------
-
     def add_new_transaction(self, transaction: Transaction) -> bool:
         '''
         add a new transaction to the block
@@ -105,6 +103,8 @@ class Blockchain:
                 self.unconfirmed_transactions.append(transaction.to_json())
                 return True
         return False
+
+    # ------------------------------------------------------------------------------------------------------------------
 
     def proof_of_work(self, block: Block) -> str:
         '''Proof-of-Work to find out the correct nonce'''
@@ -139,6 +139,9 @@ class Blockchain:
         block.hash = proof
         self.chain.append(block.to_json())
         return True
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # New or modified methods beyond EE4017 labs
 
     def mine(self, wallet: Wallet) -> Union[Block, bool]:
         '''
@@ -222,8 +225,9 @@ class Blockchain:
                 difficulty -= 1
         return difficulty
 
-    # In a cryptocurrency network, we might receive a full of copy of the chain from other nodes.
+    # In a cryptocurrency network, we might receive a full copy of the chain from other nodes.
     # We should validate this chain before replacing it with ours.
+    # Reject malformed blocks
     def valid_chain(self, chain: List[str]) -> bool:
         '''check if a blockchain (all blocks) is valid'''
         current_index = 0
@@ -299,10 +303,6 @@ class Blockchain:
             return True
         return False
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # New methods beyond EE4017 labs
-    # Implement partial validation by requesting Merkle Path from light node to full node
-
     def hash_sum(self, a, b):
         '''simple method to get sum hash of two strings'''
         a = str(a).encode()
@@ -310,6 +310,7 @@ class Blockchain:
         result = sha256(a + b).hexdigest()
         return result
 
+    # Implement partial validation by requesting Merkle Path from light node to full node
     def merkle_path(self, transaction: Transaction):
         '''return merkle path of given transaction'''
         path = []
