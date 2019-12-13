@@ -1,0 +1,3 @@
+${PODS_ROOT}/Target Support Files/Pods-PyCoin Wallet/Pods-PyCoin Wallet-frameworks.sh
+${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework
+${BUILT_PRODUCTS_DIR}/SwiftyRSA/SwiftyRSA.framework
