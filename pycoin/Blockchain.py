@@ -2,7 +2,7 @@ import datetime
 import json
 from urllib.parse import urlparse
 from hashlib import sha256
-from typing import List, Union
+from typing import List, Union, Set
 
 import requests
 from pyprnt import prnt
@@ -14,8 +14,6 @@ from pycoin import Block
 # EE4017 Lab 5
 
 class Blockchain:
-    # store the IP addresses of other nodes in the cryptocurrency network
-    nodes = set()
     # limit difficulty
     MIN_DIFFICULTY = 1
     MAX_DIFFICULTY = 6
@@ -27,6 +25,8 @@ class Blockchain:
         The blockchain class has 2 important elements: unconfirmed transactions and the blockchain itself.
         The first block in the blockchain is the Genesis block (the first block ever).
         '''
+        # store the IP addresses of other nodes in the cryptocurrency network
+        self.nodes: Set[str] = set()
         self.unconfirmed_transactions: List[str] = []
         self.chain: List[str] = []
         self.create_genesis_block(wallet)
