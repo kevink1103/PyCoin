@@ -1,4 +1,4 @@
-requests==2.22.0
+requests==2.31.0
 pycryptodome==3.9.4
 pyprnt==2.3.4
 Flask==1.1.1
